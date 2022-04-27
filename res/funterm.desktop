@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories=Utilities;
+Comment=Fun Terminal
+Exec=/usr/bin/funterm %u
+GenericName=Fun Terminal
+Icon=funterm
+Keywords=funterm;
+Name=Fun终端
+Type=Application
+X-Deepin-Vendor=user-custom
