@@ -24,6 +24,19 @@ ExternalProject_Add(configor
         )
 
 
+ExternalProject_Add(handycpp
+        GIT_REPOSITORY "https://github.com/zhangfuwen/handycpp"
+        GIT_TAG "main"
+        SOURCE_DIR "${CMAKE_BINARY_DIR}/handycpp/src"
+        BINARY_DIR "${CMAKE_BINARY_DIR}/handycpp/build"
+        CONFIGURE_COMMAND ""
+        UPDATE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        TEST_COMMAND ""
+        )
+
+
 MESSAGE("c flag is ${CMAKE_C_FLAGS}")
 MESSAGE("os is ${CMAKE_SYSTEM}")
 
@@ -52,17 +65,26 @@ find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) #
 pkg_check_modules(VTE REQUIRED vte-2.91) #  apt install libvte-2.91-dev
+
+add_custom_command(OUTPUT gen_headers/preference_dialog.ui.h
+        COMMAND mkdir ${CMAKE_SOURCE_DIR}/gen_headers || ${CMAKE_SOURCE_DIR}/src/glade_code_gen --filename=${CMAKE_SOURCE_DIR}/res/preference_dialog.glade --quiet=true > ${CMAKE_SOURCE_DIR}/gen_headers/preference_dialog.ui.h
+        )
 add_executable(funterm src/FunTerm.cpp
         src/PanedContainer.cpp
         src/TerminalSession.cpp
+        src/Preference.cpp
+        gen_headers/preference_dialog.ui.h
         src/Tab.cpp
         )
 add_dependencies(funterm configor)
+add_dependencies(funterm handycpp)
 target_include_directories(funterm
         PRIVATE
+        gen_headers
         ${GTKMM3_INCLUDE_DIRS}
 #        ${VTE_INCLUDE_DIRS} we don't use this one, we use the one we built in thirdparty
-        ${CMAKE_BINARY_DIR}/configor/src/include)
+        ${CMAKE_BINARY_DIR}/configor/src/include
+        ${CMAKE_BINARY_DIR}/handycpp/src/include)
 set_property(TARGET funterm PROPERTY CXX_STANDARD 17)
 message("gtkmm ${GTKMM3_INCLUDE_DIRS}")
 target_include_directories(funterm PRIVATE thirdparty/install/include/vte-2.91/)
@@ -96,18 +118,20 @@ set(CPACK_PACKAGE_VERSION "1.1")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA, "scripts/prerm;scripts/postrm;scripts/preinst;scripts/postinst")
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libvte")
 
-INSTALL(FILES res/funterm.desktop DESTINATION share/applications PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0 DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0.6900.0 DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES res/funterm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/etc/profile.d/vte.sh DESTINATION /etc/profile.d/vte-funterm.sh PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0.6900.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(TARGETS funterm DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES res/funterm.glade DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
-INSTALL(FILES res/match_dialog.glade DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
-INSTALL(FILES res/headerbar.glade DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
-INSTALL(FILES res/style.css DESTINATION /usr/share/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
-INSTALL(FILES res/funterm.png DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/funterm/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES res/funterm.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/match_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/preference_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/headerbar.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/style.css DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/funterm.png DESTINATION /usr/share/icons/hicolor/48x48/apps/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES res/funterm.conf DESTINATION /etc/rsyslog.d/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES language/zh_CN/LC_MESSAGES/messages.mo DESTINATION /usr/share/funterm/data/language/zh_CN/LC_MESSAGES/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES language/zh_CN/LC_MESSAGES/messages.mo DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data/language/zh_CN/LC_MESSAGES/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 
 INCLUDE(CPack)
 # xgettext -k_ -o language/zh_CN/LC_MESSAGES/messages.po ./src/Engine.cpp

@@ -140,7 +140,7 @@ void RootPanedContainer::Dump() {
     std::queue<void *> q;
     q.emplace(this);
     while(!q.empty()) {
-        int siz = q.size();
+        int siz = (int)q.size();
         for(int i = 0; i< siz; i++) {
             auto x = q.front();
             q.pop();

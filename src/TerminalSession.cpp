@@ -5,7 +5,7 @@
 #include "TerminalSession.h"
 #include <pcre2.h>
 #include <vte/vte.h>
-TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICAL){
+TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
     m_tab = tab;
     static int id = 0;
     id++;
@@ -43,10 +43,19 @@ TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICA
     });
     set_focus_child(*m_bottomBar);
     m_bottomBar->set_focus_child(*vte);
-    signal_size_allocate().connect([this](Gdk::Rectangle &rec)  {
-        this->set_position(40);
-    });
+    signal_size_allocate().connect([this](Gdk::Rectangle &rec) { this->set_position(40); });
     Gtk::Paned::set_property("max-position", 40);
+
+    m_pref = std::make_unique<Preference>(
+        [this](const Preference &pref, Changes changes) { this->UpdatePreference(pref, changes); });
+    if (handycpp::file::is_file_exist((configDir + prefFile).c_str())) {
+        std::string text = handycpp::file::readText(configDir + prefFile);
+        m_pref->FromString(text);
+        Changes changes;
+        changes.cs_changed = false;
+        changes.font_changed = true;
+        UpdatePreference(*m_pref, changes);
+    }
 }
 
 void TerminalSession::InitMatchBox() {
@@ -76,109 +85,73 @@ void TerminalSession::InitMatchBox() {
 void TerminalSession::RefreshMatch() {
     FUN_DEBUG("highlight: %d", m_highlightMatch);
     if (m_highlightMatch) {
-        vte_terminal_match_remove_all(terminal);
-        vte_terminal_highlight_clear(terminal);
+        vte_terminal_match_remove_all(m_terminal);
+        vte_terminal_highlight_clear(m_terminal);
         for (auto &m : matchRegexes) {
             if (m.pattern == nullptr) {
                 m.CompileForMatch();
             }
             FUN_DEBUG("add_regex %s, %p", m.text.c_str(), m.pattern);
-            vte_terminal_match_add_regex(terminal, m.pattern, 0);
+            vte_terminal_match_add_regex(m_terminal, m.pattern, 0);
             AddHighlight(m);
         }
 
     } else {
-        vte_terminal_match_remove_all(terminal);
+        vte_terminal_match_remove_all(m_terminal);
     }
 }
-void TerminalSession::AddHighlight(const RegexMatch &m) const {
-    HighlightStyle  style{0};
-    style.backmask = 0xffffffff;
-    style.back = 11;
+void TerminalSession::AddHighlight(const RegexMatch &m, const HighlightStyle &style) const {
 
     std::string s = m.text;
-    HighlightPattern  pat;
+    HighlightPattern pat;
     if (!m.caseSensitive) {
         pat.regex_flags |= PCRE2_CASELESS;
     } else {
         pat.regex_flags = 0;
     }
     if (!m.regex) { // not regex search
-                s = g_regex_escape_string(m.text.c_str(), m.text.size());
+        s = g_regex_escape_string(m.text.c_str(), m.text.size());
     }
     if (m.wholeWord) {
-                using namespace std::string_literals;
-                s = "\\b" + s + "\\b";
+        using namespace std::string_literals;
+        s = "\\b" + s + "\\b";
     }
     pat.pattern = s.c_str();
     pat.style = style;
     pat.regex = true;
-    vte_terminal_highlight_add_pattern(terminal, pat);
+    vte_terminal_highlight_add_pattern(m_terminal, pat);
 }
 
 void TerminalSession::InitSearchBox() {
-    searchBox = new Gtk::Box();
-    auto search = new Gtk::SearchEntry();
-    auto caseSensitiveSearch = new Gtk::ToggleButton("Cc");
-    auto regexSearch = new Gtk::ToggleButton(".*");
-    auto wholeWord = new Gtk::ToggleButton("W");
-    caseSensitiveSearch->get_style_context()->add_class("circular");
-    regexSearch->get_style_context()->add_class("circular");
-    wholeWord->get_style_context()->add_class("circular");
-    caseSensitiveSearch->set_relief(Gtk::RELIEF_NONE);
-    regexSearch->set_relief(Gtk::RELIEF_NONE);
-    wholeWord->set_relief(Gtk::RELIEF_NONE);
-    caseSensitiveSearch->set_tooltip_text("Case-sensitive Search");
-    regexSearch->set_tooltip_text("Search with regular expresion");
-    wholeWord->set_tooltip_text("Search with whole word");
-    auto next = new Gtk::Button();
-    auto prev = new Gtk::Button();
-    auto close = new Gtk::Button();
-
-    next->set_image_from_icon_name("go-down-symbolic", Gtk::ICON_SIZE_MENU);
-    prev->set_image_from_icon_name("go-up-symbolic", Gtk::ICON_SIZE_MENU);
-    close->set_image_from_icon_name("window-close-symbolic", Gtk::ICON_SIZE_MENU);
-    next->set_relief(Gtk::RELIEF_NONE);
-    prev->set_relief(Gtk::RELIEF_NONE);
-    close->set_relief(Gtk::RELIEF_NONE);
-    next->set_halign(Gtk::ALIGN_END);
-    prev->set_halign(Gtk::ALIGN_END);
-    close->set_halign(Gtk::ALIGN_END);
-    searchBox->pack_start(*search);
-    searchBox->pack_start(*caseSensitiveSearch);
-    searchBox->pack_start(*wholeWord);
-    searchBox->pack_start(*regexSearch);
-    searchBox->pack_end(*close);
-    searchBox->pack_end(*next);
-    searchBox->pack_end(*prev);
-    searchBox->set_halign(Gtk::ALIGN_CENTER);
-    searchBox->set_valign(Gtk::ALIGN_CENTER);
-    search->signal_next_match().connect([search, this, wholeWord, caseSensitiveSearch, regexSearch]() {
-        auto text = search->get_text();
+    searchBox = std::make_unique<SearchBox>();
+    searchBox->signal_next_match().connect([this]() {
+        auto status = searchBox->GetStatus();
+        auto text = status.text;
         auto regex = vte_regex_new_for_search(text.c_str(), text.length() + 1, 0, nullptr);
-        vte_terminal_search_set_regex(terminal, regex, 0);
-          RegexMatch m(text);
-          m.caseSensitive = caseSensitiveSearch->get_active();
-          m.regex = regexSearch->get_active();
-          m.wholeWord = wholeWord->get_active();
-          AddHighlight(m);
+        vte_terminal_search_set_regex(m_terminal, regex, 0);
+        RegexMatch m(text);
+        m.caseSensitive = status.caseSensitive;
+        m.regex = status.regexSearch;
+        m.wholeWord = status.wholeWord;
+        AddHighlight(m);
     });
     //    search->signal_insert_text().connect([](){
     //      FUN_DEBUG("");
     //      return true;
     //    });
-    search->signal_search_changed().connect([this, search, caseSensitiveSearch, regexSearch, wholeWord]() {
+    searchBox->signal_search_changed().connect([this]() {
+        auto status = searchBox->GetStatus();
         GError *error = nullptr;
-        auto text = search->get_text();
+        auto text = status.text;
         guint32 compile_flags;
         compile_flags = PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_UCP | PCRE2_MULTILINE;
-        if (!caseSensitiveSearch->get_active()) {
+        if (!status.caseSensitive) {
             compile_flags |= PCRE2_CASELESS;
         }
-        if (!regexSearch->get_active()) { // not regex search
+        if (!status.regexSearch) { // not regex search
             text = g_regex_escape_string(text.c_str(), text.size());
         }
-        if (wholeWord->get_active()) {
+        if (status.wholeWord) {
             text = "\\b" + text + "\\b";
         }
 
@@ -187,38 +160,36 @@ void TerminalSession::InitSearchBox() {
         }
         searchRegex = vte_regex_new_for_search(text.c_str(), text.size(), compile_flags, &error);
         if (searchRegex != nullptr) {
-            vte_terminal_search_set_regex(terminal, searchRegex, 0);
-            if (!vte_terminal_search_find_next(terminal)) {
-                vte_terminal_search_find_previous(terminal);
+            vte_terminal_search_set_regex(m_terminal, searchRegex, 0);
+            if (!vte_terminal_search_find_next(m_terminal)) {
+                vte_terminal_search_find_previous(m_terminal);
             }
         } else {
             FUN_ERROR("regex error: %s", vte_regex_error_quark());
         }
         FUN_DEBUG("search changed: %s", text.c_str());
     });
-    next->signal_clicked().connect([this]() {
+    searchBox->signal_next_clicked().connect([this]() {
         FUN_DEBUG("search next");
-        vte_terminal_search_find_next(terminal);
+        vte_terminal_search_find_next(m_terminal);
     });
-    next->set_can_focus(true);
-    prev->signal_clicked().connect([this]() {
+    searchBox->signal_prev_clicked().connect([this]() {
         FUN_DEBUG("search prev");
-        vte_terminal_search_find_previous(terminal);
-        //      return true;
+        vte_terminal_search_find_previous(m_terminal);
     });
 
-    close->signal_clicked().connect([this]() { this->ToggleSearch(); });
+    searchBox->signal_close_clicked().connect([this]() { this->ToggleSearch(); });
 }
 
-void TerminalSession::ToggleMatch() {
-    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] == titleBox) {
+void TerminalSession::ToggleMatch(const Glib::ustring &text, bool showOnly) {
+    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] != m_matchBox) {
         m_topBar->remove(*titleBox);
         m_topBar->pack_start(*m_matchBox);
-        if(!m_showTitle && get_child1() == nullptr) {
+        if (!m_showTitle && get_child1() == nullptr) {
             pack1(*m_topBar);
         }
     } else {
-        if(!m_showTitle && get_child1() != nullptr) {
+        if (!m_showTitle && get_child1() != nullptr) {
             remove(*m_topBar);
         }
         m_topBar->remove(*m_matchBox);
@@ -227,20 +198,42 @@ void TerminalSession::ToggleMatch() {
     m_topBar->show_all();
 }
 
-void TerminalSession::ToggleSearch() {
-    static Gtk::Widget * save = nullptr;
-    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] == titleBox) {
-        m_topBar->remove(*titleBox);
-        m_topBar->pack_start(*searchBox);
-        if(!m_showTitle && get_child1() == nullptr) {
+void TerminalSession::AddHighlight(const Glib::ustring &text) {
+    RegexMatch m(text);
+    m.caseSensitive = true;
+    m.regex = false;
+    m.wholeWord = false;
+    m_highlightedTexts.insert(text);
+    AddHighlight(m, getRandomStyle());
+}
+
+void TerminalSession::ToggleSearch(const Glib::ustring &text, bool showOnly) {
+    static Gtk::Widget *save = nullptr;
+    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] != &(Gtk::Box &)*searchBox) {
+        // currently not showing
+        m_topBar->remove(*m_topBar->get_children()[0]);
+        m_topBar->pack_start((Gtk::Box &)*searchBox);
+        if (!text.empty()) {
+            searchBox->SetText(text);
+        }
+        if (!m_showTitle && get_child1() == nullptr) {
             pack1(*m_topBar);
         }
     } else {
-        if(!m_showTitle && get_child1() != nullptr) {
-            remove(*m_topBar);
+        // currently showing
+        if (showOnly) {
+            // not hiding
+            if (!text.empty()) {
+                searchBox->SetText(text);
+            }
+        } else {
+            // hide
+            if (!m_showTitle && get_child1() != nullptr) {
+                remove(*m_topBar);
+            }
+            m_topBar->remove((Gtk::Box &)*searchBox);
+            m_topBar->pack_start(*titleBox);
         }
-        m_topBar->remove(*searchBox);
-        m_topBar->pack_start(*titleBox);
     }
     m_topBar->show_all();
 }
@@ -432,7 +425,7 @@ void TerminalSession::ShowMatchDialog() {
 }
 
 gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
-//    FUN_INFO("event %c, %s", (char)event->keyval, event->string);
+    //    FUN_INFO("event %c, %s", (char)event->keyval, event->string);
     if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK) && ((char)event->keyval == 'F')) {
         TerminalSession *sess = (TerminalSession *)user_data;
         sess->ToggleSearch();
@@ -443,6 +436,20 @@ gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
         return true;
     }
     return false;
+}
+
+void selection_changed(VteTerminal *term, TerminalSession *sess) {
+    vte_terminal_copy_primary(term);
+    auto clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+    Glib::ustring text = gtk_clipboard_wait_for_text(clipboard);
+    sess->m_selectionText = text;
+    //    if(vte_terminal_get_has_selection(term)) {
+    //        vte_terminal_copy_clipboard_format(term, VTE_FORMAT_TEXT);
+    //    }
+}
+
+void notification_received(VteTerminal *term, const gchar *summary, const gchar *body) {
+    FUN_INFO("summary:%s, body:%s", summary, body);
 }
 void TerminalSession::InitTerminal() {
     auto termWidget = vte_terminal_new();
@@ -473,8 +480,10 @@ void TerminalSession::InitTerminal() {
     vte_terminal_set_color_background(term, backgroundColor);
     gdk_rgba_parse(backgroundColor, "#00002B2B3636");
     vte_terminal_set_color_foreground(term, backgroundColor);
-    terminal = term;
-    g_signal_connect(terminal, "key-press-event", G_CALLBACK(key_press_cb), this);
+    m_terminal = term;
+    g_signal_connect(m_terminal, "key-press-event", G_CALLBACK(key_press_cb), this);
+    g_signal_connect(m_terminal, "selection-changed", G_CALLBACK(selection_changed), this);
+    g_signal_connect(m_terminal, "notification-received", G_CALLBACK(notification_received), this);
 
     gtk_widget_set_vexpand(termWidget, true);
     gtk_widget_set_halign(termWidget, GTK_ALIGN_FILL);
@@ -498,13 +507,13 @@ void TerminalSession::InitTerminal() {
 
     vte->signal_button_press_event().connect([this](GdkEventButton *ev) {
         FUN_INFO("button press");
-        Gtk::Menu menu;
-        Gtk::MenuItem item;
-        item.set_label("close");
-        item.signal_select().connect([this]() { GetParent()->remove(this); });
-        menu.add(item);
-        menu.show_all();
-        menu.popup_at_pointer((GdkEvent *)ev);
+
+        if (ev->button == GDK_BUTTON_SECONDARY) {
+            ShowContextMenu(ev);
+
+            FUN_INFO("right button");
+            return true;
+        }
 
         return true;
     });
@@ -513,8 +522,149 @@ void TerminalSession::InitTerminal() {
     //        vte->set_focus_on_click(true);
 }
 
-bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry * label) {
-    if(ev->type == GDK_2BUTTON_PRESS) {
+void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) {
+    FUN_DEBUG("UpdatePreference %d", changes.cs_changed);
+    if (changes.cs_changed) {
+        auto cs = pref.GetColorscheme();
+        if (cs.has_value()) {
+            FUN_DEBUG("cs.has_value");
+            if (cs->numColor != 0) {
+                vte_terminal_set_colors(m_terminal, &cs->fg, &cs->bg, cs->palette, cs->numColor);
+            }
+            if (cs->hasBg) {
+                vte_terminal_set_color_background(m_terminal, &cs->bg);
+            }
+            if (cs->hasFg) {
+                vte_terminal_set_color_foreground(m_terminal, &cs->fg);
+            }
+            if (cs->hasCursor) {
+                vte_terminal_set_color_cursor(m_terminal, &cs->cursor);
+            }
+        }
+    }
+    if (changes.font_changed) {
+        vte_terminal_set_font(m_terminal, pref.font_name);
+    }
+}
+void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
+    m_popupMenu.Clear();
+
+    auto itemCopy = std::make_unique<Gtk::MenuItem>("Copy", true);
+    //            itemCopy->set_related_action(Gtk::Action::create("copy", "copy", "copy"));
+    itemCopy->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        CopyText();
+        return true;
+    });
+    auto itemPaste = std::make_unique<Gtk::MenuItem>("Paste", true);
+    itemPaste->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        PasteText();
+        return true;
+    });
+
+    auto itemSearch = std::make_unique<Gtk::MenuItem>("Search", false);
+    itemSearch->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        ToggleSearch();
+        return true;
+    });
+    auto itemHighlight = std::make_unique<Gtk::MenuItem>("Highlight Management", false);
+    itemHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        ToggleMatch();
+        return true;
+    });
+
+    auto itemSearchSelected = std::make_unique<Gtk::MenuItem>("Search Selected", false);
+    itemSearchSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        ToggleSearch(m_selectionText, true);
+        return true;
+    });
+    auto itemHighlightSelected = std::make_unique<Gtk::MenuItem>("Highlight Selected", false);
+    itemHighlightSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        AddHighlight(m_selectionText);
+        return true;
+    });
+
+    auto itemCopyPath = std::make_unique<Gtk::MenuItem>("Copy Path", false);
+    itemCopyPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
+        auto filePath = vte_terminal_get_current_file_uri(m_terminal);
+        FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
+        if (dirPath != nullptr) {
+            auto clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+            gtk_clipboard_set_text(clipboard, dirPath, strlen(dirPath));
+        }
+
+        return true;
+    });
+
+    auto itemOpenPath = std::make_unique<Gtk::MenuItem>("Open Path", false);
+    itemOpenPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
+        auto filePath = vte_terminal_get_current_file_uri(m_terminal);
+        FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
+        if (dirPath != nullptr) {
+            g_app_info_launch_default_for_uri(dirPath, nullptr, nullptr);
+        }
+        return true;
+    });
+
+    auto itemPreference = std::make_unique<Gtk::MenuItem>("Preference", true);
+    itemPreference->signal_button_press_event().connect([this](GdkEventButton *ev) {
+        if (m_pref != nullptr) {
+            m_pref->PreferenceFromDialog();
+        }
+        return true;
+    });
+    if (vte_terminal_get_has_selection(m_terminal)) {
+        if (m_highlightedTexts.count(m_selectionText)) {
+            auto itemRemoveHighlight = std::make_unique<Gtk::MenuItem>("Remove Highlight", true);
+            itemRemoveHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
+                m_highlightedTexts.erase(m_selectionText);
+                vte_terminal_highlight_clear(m_terminal);
+                for (auto text : m_highlightedTexts) {
+                    AddHighlight(text);
+                }
+                return true;
+            });
+            m_popupMenu.Add(std::move(itemRemoveHighlight));
+        }
+    }
+
+    m_popupMenu.Add(std::move(itemCopy));
+    m_popupMenu.Add(std::move(itemPaste));
+    m_popupMenu.Add(std::make_unique<Gtk::SeparatorMenuItem>());
+
+    m_popupMenu.Add(std::move(itemSearchSelected));
+    m_popupMenu.Add(std::move(itemHighlightSelected));
+    m_popupMenu.Add(std::make_unique<Gtk::SeparatorMenuItem>());
+
+    m_popupMenu.Add(std::move(itemCopyPath));
+    m_popupMenu.Add(std::move(itemOpenPath));
+
+    m_popupMenu.Add(std::make_unique<Gtk::SeparatorMenuItem>());
+    m_popupMenu.Add(std::move(itemSearch));
+    m_popupMenu.Add(std::move(itemHighlight));
+    m_popupMenu.Add(std::move(itemPreference));
+    m_popupMenu.Show((GdkEvent *)ev);
+}
+
+void TerminalSession::CopyText() {
+    if (m_terminal == nullptr) {
+        return;
+    }
+    if (vte_terminal_get_has_selection(m_terminal)) {
+        vte_terminal_copy_clipboard_format(m_terminal, VTE_FORMAT_TEXT);
+    }
+}
+
+void TerminalSession::PasteText() {
+    if (m_terminal == nullptr) {
+        return;
+    }
+    vte_terminal_paste_clipboard(m_terminal);
+}
+
+bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label) {
+    if (ev->type == GDK_2BUTTON_PRESS) {
         FUN_INFO("double click");
         label->set_can_focus(true);
         label->set_has_frame(true);
