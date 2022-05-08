@@ -67,7 +67,7 @@ pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) #
 #pkg_check_modules(VTE REQUIRED vte-2.91) #  apt install libvte-2.91-dev
 
 add_custom_command(OUTPUT gen_headers/preference_dialog.ui.h
-        COMMAND (mkdir ${CMAKE_SOURCE_DIR}/gen_headers || true) && ${CMAKE_SOURCE_DIR}/src/glade_code_gen --filename=${CMAKE_SOURCE_DIR}/res/preference_dialog.glade --quiet=true > ${CMAKE_SOURCE_DIR}/gen_headers/preference_dialog.ui.h
+        COMMAND mkdir ${CMAKE_SOURCE_DIR}/gen_headers || true && ${CMAKE_SOURCE_DIR}/src/glade_code_gen --filename=${CMAKE_SOURCE_DIR}/res/preference_dialog.glade --quiet=true > ${CMAKE_SOURCE_DIR}/gen_headers/preference_dialog.ui.h
         )
 add_executable(funterm src/FunTerm.cpp
         src/PanedContainer.cpp
