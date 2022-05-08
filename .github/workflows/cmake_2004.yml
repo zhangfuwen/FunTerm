@@ -24,7 +24,7 @@ jobs:
       run: sudo apt install gnutls-bin g++-11 libgnutls30 libsystemd-dev valac gobject-introspection python3-gi libgirepository1.0-dev libvte-dev libgnutls* libibus-1.0-dev libgtkmm-3.0-dev g++ libpulse-dev libpsl-dev libbrotli-dev meson ninja-build
 
     - name: update g++
-      run: sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 300; sudo update-alternatives --set cc /usr/bin/gcc; sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 300; sudo update-alternatives --set c++ /usr/bin/g++
+      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11; sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 300; sudo update-alternatives --set cc /usr/bin/gcc; sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 300; sudo update-alternatives --set c++ /usr/bin/g++
     
     - name: prepare vte
       run: bash prepare_vte.sh
