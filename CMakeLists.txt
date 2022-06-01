@@ -76,6 +76,8 @@ add_executable(funterm src/FunTerm.cpp
         gen_headers/preference_dialog.ui.h
         src/Tab.cpp
         )
+
+
 add_dependencies(funterm configor)
 add_dependencies(funterm handycpp)
 target_include_directories(funterm
@@ -110,6 +112,15 @@ endif()
 #set(CMAKE_BUILD_WITH_INSTALL_RPATH)
 #set(CMAKE_INSTALL_RPATH "/usr/share/funterm/data/")
 #set(CMAKE_BUILD_RPATH_USE_ORIGIN 1)
+pkg_check_modules(libnautilus-extension REQUIRED libnautilus-extension IMPORTED_TARGET)
+add_library(nautilus_funterm SHARED src/nautilus_extension.cpp)
+target_include_directories(nautilus_funterm
+        PRIVATE ${GTKMM3_INCLUDE_DIRS}
+        )
+target_link_libraries(nautilus_funterm
+        ${GTKMM3_LIBRARIES}
+        PkgConfig::libnautilus-extension
+        )
 
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Dean") #required
@@ -124,6 +135,7 @@ INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0.6900.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(TARGETS funterm DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(TARGETS nautilus_funterm DESTINATION lib/x86_64-linux-gnu/nautilus/extensions-3.0/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES res/funterm.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/match_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/preference_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)

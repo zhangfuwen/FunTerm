@@ -208,7 +208,7 @@ class TerminalSession : public Gtk::Paned {
 public:
     PanedContainer *GetParent() { return dynamic_cast<PanedContainer *>(this->get_parent()); }
     Tab *GetTab() { return m_tab; }
-    explicit TerminalSession(Tab *tab);
+    explicit TerminalSession(Tab *tab, std::string workingDir = "");
     void InitTitleBox();
     void InitTerminal();
     void InitSearchBox();
@@ -231,6 +231,7 @@ public:
 
 private:
     int m_id = 0;
+    std::string workingDir = "";
 
     // root tab
     Tab *m_tab = nullptr;

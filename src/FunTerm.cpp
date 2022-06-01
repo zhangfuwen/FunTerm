@@ -105,7 +105,11 @@ static int SplitTerm(Gtk::Orientation ori) {
 int main(int argc, char *argv[]) {
 
     // funterm
-    app = Gtk::Application::create("fun.xjbcode.funterm");
+    app = Gtk::Application::create("fun.xjbcode.funterm", Gio::APPLICATION_HANDLES_COMMAND_LINE);
+    app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "hori", 'h', "file system uri");
+    app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "vert", 'v', "file system uri");
+    app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "tab", 't', "file system uri");
+
     builder = Gtk::Builder::create_from_file( RES_FILE_DIR "/funterm.glade");
     std::cout << RES_FILE_DIR << std::endl;
 
@@ -142,13 +146,13 @@ int main(int argc, char *argv[]) {
     });
 
 
-    auto new_tab = [](Gtk::Notebook * notebook) {
+    auto new_tab = [](Gtk::Notebook * notebook, std::string wd = "") {
         static int tabId = notebook->get_n_pages();
       auto *panned = new RootPanedContainer();
       auto tab = new Tab(panned, "Tab-" + std::to_string(tabId));
       panned->setId();
       panned->setRoot();
-      auto termSess = new TerminalSession(tab);
+      auto termSess = new TerminalSession(tab, wd);
       panned->add1(termSess);
       tab->pack_start(*panned);
       tab->AddToNotebook(*notebook);
@@ -174,12 +178,35 @@ int main(int argc, char *argv[]) {
     but_below_split->signal_clicked().connect([]() { SplitTerm(Gtk::ORIENTATION_VERTICAL); });
 
 
+    app->signal_command_line().connect([&](const Glib::RefPtr<Gio::ApplicationCommandLine> & cmd) -> int{
+      const auto options = cmd->get_options_dict();
+      if(!options) {
+          FUN_INFO("not options found");
+          return 0;
+      }
+
+      //Parse command-line arguments that were passed either to the primary (first) instance
+      //or to subsequent instances.
+      //Note that this parsing is happening in the primary (not local) instance.
+      bool foo_value = false;
+      Glib::ustring uri;
+      if(auto ret = options->lookup_value("tab", uri); ret) {
+          FUN_INFO("uri %s", uri.substr(7).c_str());
+          new_tab(notebook, uri.substr(7));
+      } else {
+          FUN_INFO("uri not found");
+      }
+      app->activate();
+
+      //The local instance will eventually exit with this status code:
+      return EXIT_SUCCESS;
+
+    }, false);
 
     //    headerbar = new Gtk::HeaderBar();
     win->set_titlebar(*headerbar);
     win->show_all();
     win->show_all_children();
-
 
     win->set_title("Fun Terminal");
 

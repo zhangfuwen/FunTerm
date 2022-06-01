@@ -5,7 +5,8 @@
 #include "TerminalSession.h"
 #include <pcre2.h>
 #include <vte/vte.h>
-TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
+TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
+    workingDir = wd;
     m_tab = tab;
     static int id = 0;
     id++;
@@ -21,8 +22,9 @@ TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICA
     // setup topbar
     m_topBar = new Gtk::Box();
     m_topBar->pack_start(*titleBox);
+    m_topBar->get_style_context()->add_class("top_bar");
     Gtk::Paned::add1(*m_topBar);
-    Gtk::Paned::set_position(40);
+    Gtk::Paned::set_position(30);
     set_orientation(Gtk::ORIENTATION_VERTICAL);
     show_all();
 
@@ -43,8 +45,9 @@ TerminalSession::TerminalSession(Tab *tab) : Gtk::Paned(Gtk::ORIENTATION_VERTICA
     });
     set_focus_child(*m_bottomBar);
     m_bottomBar->set_focus_child(*vte);
-    signal_size_allocate().connect([this](Gdk::Rectangle &rec) { this->set_position(40); });
-    Gtk::Paned::set_property("max-position", 40);
+    signal_size_allocate().connect([this](Gdk::Rectangle &rec) {
+        this->set_position(30);
+        });
 
     m_pref = std::make_unique<Preference>(
         [this](const Preference &pref, Changes changes) { this->UpdatePreference(pref, changes); });
@@ -460,7 +463,7 @@ void TerminalSession::InitTerminal() {
     vte_terminal_spawn_sync(
         term,
         VTE_PTY_DEFAULT,
-        nullptr,
+        workingDir.empty()? nullptr : workingDir.c_str(),
         startterm,
         nullptr,
         G_SPAWN_SEARCH_PATH,
@@ -543,6 +546,10 @@ void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) 
         }
     }
     if (changes.font_changed) {
+        auto family = pango_font_description_get_family(pref.font_name);
+        auto size = pango_font_description_get_size(pref.font_name);
+        FUN_DEBUG("font family %s, size %d", family, size);
+
         vte_terminal_set_font(m_terminal, pref.font_name);
     }
 }
@@ -678,8 +685,8 @@ void TerminalSession::InitTitleBox() {
 
     auto buttonClose = new Gtk::Button();
     auto buttonMax = new Gtk::Button();
-    buttonClose->set_image_from_icon_name("window-close-symbolic", Gtk::ICON_SIZE_SMALL_TOOLBAR);
-    buttonMax->set_image_from_icon_name("window-maximize-symbolic", Gtk::ICON_SIZE_MENU);
+    buttonClose->set_image_from_icon_name("window-close-symbolic", Gtk::ICON_SIZE_BUTTON);
+    buttonMax->set_image_from_icon_name("window-maximize-symbolic", Gtk::ICON_SIZE_BUTTON);
     buttonMax->set_relief(Gtk::RELIEF_NONE);
     buttonClose->set_relief(Gtk::RELIEF_NONE);
     buttonMax->get_style_context()->add_class("circular");
@@ -721,11 +728,13 @@ void TerminalSession::InitTitleBox() {
         }
     });
     titleBox->set_halign(Gtk::ALIGN_FILL);
-    titleBox->set_border_width(5);
+    titleBox->set_border_width(0);
+
     titleBox->pack_start(*label);
     titleBox->pack_end(*buttonClose, false, false, 0);
     titleBox->pack_end(*buttonMax, false, false, 0);
     titleBox->set_halign(Gtk::ALIGN_FILL);
+    titleBox->get_style_context()->add_class("title_box");
     auto color = buttonMax->get_style_context()->get_color();
     auto bgcolor = buttonMax->get_style_context()->get_background_color();
     auto color2 = buttonMax->get_style_context()->get_border_color();
