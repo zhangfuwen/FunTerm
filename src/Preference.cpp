@@ -33,6 +33,10 @@ void Preference::PreferenceFromDialog() {
         auto desc = gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(pref_custom_font->gobj()));
         auto size = gtk_font_chooser_get_font_size(GTK_FONT_CHOOSER(pref_custom_font->gobj()));
         if(pref_custom_font_checked->get_active()) {
+            FUN_DEBUG("font desc %p ", desc);
+            if(desc) {
+                FUN_DEBUG("font desc str:%s", pango_font_description_to_string(desc));
+            }
             this->font_name = desc;
             this->font_size = size/1000;
         }

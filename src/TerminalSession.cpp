@@ -472,6 +472,7 @@ void TerminalSession::InitTerminal() {
         nullptr,
         nullptr,
         nullptr);
+    vte_terminal_set_scrollback_lines(term, 10000);
     vte_terminal_set_font_scale(term, 1.0f);
     PangoFontDescription *fontDesc = pango_font_description_new();
     pango_font_description_set_family(fontDesc, "FiraCode");

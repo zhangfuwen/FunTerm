@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-if [[ -d thirdparty ]]; then
-  rm -rf thirdparty
-fi
-
-mkdir thirdparty
+[[ ! -d thirdparty ]] && mkdir thirdparty
 cd thirdparty
-git clone https://github.com/zhangfuwen/vte
+[[ ! -d vte ]] && git clone https://github.com/zhangfuwen/vte
 mkdir build
 mkdir install
 cd vte
