@@ -10,17 +10,11 @@ void Preference::PreferenceFromDialog() {
     auto builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/preference_dialog.glade");
 #include "preference_dialog.ui.h"
 
-    std::vector<std::string> fileNames;
-    if(handycpp::file::is_dir_exist(colorschemeDir.c_str())) {
-        handycpp::file::listFiles(colorschemeDir, fileNames);
+    std::vector<std::string> colorSchemeFileNames;
+    if(handycpp::file::is_dir_exist(colorSchemeDir.c_str())) {
+        handycpp::file::listFiles(colorSchemeDir, colorSchemeFileNames);
     }
-    but_save->signal_clicked().connect([this](){
-        auto text = this->ToString();
-        if(!handycpp::file::is_dir_exist(configDir.c_str())) {
-            handycpp::file::create_dir(configDir.c_str(), true);
-        }
-        handycpp::file::saveFile(text.data(), text.size(), configDir + prefFile);
-    });
+    but_save->signal_clicked().connect([this](){ SavePrefs(); });
 
     pref_custom_font_checked->set_active(this->font_name != nullptr);
     if(this->font_name!= nullptr) {
@@ -45,7 +39,7 @@ void Preference::PreferenceFromDialog() {
 
 
 
-    for(auto file : fileNames) {
+    for(auto file : colorSchemeFileNames) {
         cs_combo->append(file);
     }
 
@@ -63,6 +57,13 @@ void Preference::PreferenceFromDialog() {
         }
         onChanged(*this, matchDialog->m_changes);
     });
+}
+void Preference::SavePrefs() {
+    auto text = ToString();
+    if(!handycpp::file::is_dir_exist(configDir.c_str())) {
+        handycpp::file::create_dir(configDir.c_str(), true);
+    }
+    handycpp::file::saveFile(text.data(), text.size(), configDir + prefFile);
 }
 
 std::string Preference::ToString() {

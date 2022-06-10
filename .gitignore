@@ -2,3 +2,5 @@ cmake-build-debug
 .idea
 thirdparty
 gen_headers
+build/*
+build
