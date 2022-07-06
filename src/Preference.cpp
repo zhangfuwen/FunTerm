@@ -7,8 +7,9 @@
 
 void Preference::PreferenceFromDialog() {
     Glib::setenv("GSETTINGS_SCHEMA_DIR", "res", true);
-    auto settings= Gio::Settings::create("fun.xjbcode.funterm");
-    m_scrollLines = settings->get_int("scroll_lines");
+
+    auto settings= Gio::Settings::create("fun.xjbcode.funterm", "/fun/xjbcode/funterm/");
+    m_scrollLines = settings->get_int("scroll-lines");
     PreferenceDialog *matchDialog = new PreferenceDialog();
 
     auto builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/preference_dialog.glade");
@@ -72,7 +73,7 @@ void Preference::SavePrefs() {
     handycpp::file::saveFile(text.data(), text.size(), configDir + prefFile);
     Glib::setenv("GSETTINGS_SCHEMA_DIR", "res", true);
     auto settings= Gio::Settings::create("fun.xjbcode.funterm");
-    settings->set_int("scroll_lines", m_scrollLines);
+    settings->set_int("scroll-lines", m_scrollLines);
 }
 
 std::string Preference::ToString() {

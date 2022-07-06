@@ -105,6 +105,7 @@ static int SplitTerm(Gtk::Orientation ori) {
 int main(int argc, char *argv[]) {
 
     // funterm
+    Gio::init();
     app = Gtk::Application::create("fun.xjbcode.funterm", Gio::APPLICATION_HANDLES_COMMAND_LINE);
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "hori", 'h', "file system uri");
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "vert", 'v', "file system uri");

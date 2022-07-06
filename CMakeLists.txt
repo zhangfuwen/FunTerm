@@ -144,6 +144,7 @@ INSTALL(FILES res/style.css DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PE
 INSTALL(FILES res/funterm.png DESTINATION /usr/share/icons/hicolor/48x48/apps/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES res/funterm.conf DESTINATION /etc/rsyslog.d/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES language/zh_CN/LC_MESSAGES/messages.mo DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data/language/zh_CN/LC_MESSAGES/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/fun.xjbcode.funterm.gschema.xml DESTINATION /usr/share/glib-2.0/schemas)
 
 INCLUDE(CPack)
 # xgettext -k_ -o language/zh_CN/LC_MESSAGES/messages.po ./src/Engine.cpp
