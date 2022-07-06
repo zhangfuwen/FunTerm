@@ -4,7 +4,11 @@
 
 #include "Preference.h"
 #include "common_log.h"
+
 void Preference::PreferenceFromDialog() {
+    Glib::setenv("GSETTINGS_SCHEMA_DIR", "res", true);
+    auto settings= Gio::Settings::create("fun.xjbcode.funterm");
+    m_scrollLines = settings->get_int("scroll_lines");
     PreferenceDialog *matchDialog = new PreferenceDialog();
 
     auto builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/preference_dialog.glade");
@@ -15,6 +19,8 @@ void Preference::PreferenceFromDialog() {
         handycpp::file::listFiles(colorSchemeDir, colorSchemeFileNames);
     }
     but_save->signal_clicked().connect([this](){ SavePrefs(); });
+
+    textScrollLines->set_text(Glib::ustring::format("%d", m_scrollLines));
 
     pref_custom_font_checked->set_active(this->font_name != nullptr);
     if(this->font_name!= nullptr) {
@@ -64,6 +70,9 @@ void Preference::SavePrefs() {
         handycpp::file::create_dir(configDir.c_str(), true);
     }
     handycpp::file::saveFile(text.data(), text.size(), configDir + prefFile);
+    Glib::setenv("GSETTINGS_SCHEMA_DIR", "res", true);
+    auto settings= Gio::Settings::create("fun.xjbcode.funterm");
+    settings->set_int("scroll_lines", m_scrollLines);
 }
 
 std::string Preference::ToString() {

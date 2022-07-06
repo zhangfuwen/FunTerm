@@ -110,6 +110,8 @@ public:
     const std::string colorSchemeDir = RES_FILE_DIR "/colorschemes/";
     const std::string configDir = Glib::get_user_config_dir() + "/funterm/";
     const std::string prefFile = "pref.txt";
+
+    int m_scrollLines = 0;
     void SavePrefs();
 };
 
