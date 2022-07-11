@@ -52,6 +52,7 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
     m_pref = std::make_unique<Preference>(
         [this](const Preference &pref, Changes changes) { this->UpdatePreference(pref, changes); });
     if (handycpp::file::is_file_exist((configDir + prefFile).c_str())) {
+        FUN_INFO("read preference file %s", (configDir + prefFile).c_str());
         std::string text = handycpp::file::readText(configDir + prefFile);
         m_pref->FromString(text);
         Changes changes;
@@ -478,6 +479,7 @@ void TerminalSession::InitTerminal() {
     pango_font_description_set_family(fontDesc, "FiraCode");
     pango_font_description_set_stretch(fontDesc, PangoStretch::PANGO_STRETCH_CONDENSED);
     pango_font_description_set_gravity(fontDesc, PangoGravity::PANGO_GRAVITY_WEST);
+    FUN_INFO("vte_terminal set_font %s", pango_font_description_to_string(fontDesc));
     vte_terminal_set_font(term, fontDesc);
     GdkRGBA *backgroundColor = new GdkRGBA;
     gdk_rgba_parse(backgroundColor, "#fdfdf6f6e3e3");
@@ -547,11 +549,8 @@ void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) 
         }
     }
     if (changes.font_changed) {
-        auto family = pango_font_description_get_family(pref.font_name);
-        auto size = pango_font_description_get_size(pref.font_name);
-        FUN_DEBUG("font family %s, size %d", family, size);
-
-        vte_terminal_set_font(m_terminal, pref.font_name);
+        FUN_INFO("vte_terminal set_font %s", pango_font_description_to_string(pref.font_desc));
+        vte_terminal_set_font(m_terminal, pref.font_desc);
     }
 }
 void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {

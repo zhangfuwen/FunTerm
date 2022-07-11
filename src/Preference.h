@@ -103,7 +103,7 @@ public:
     void FromString(std::string fileContext);
 
     std::optional<ColorScheme> m_currentColorScheme{};
-    PangoFontDescription *font_name = nullptr;
+    PangoFontDescription *font_desc = nullptr;
     int font_size;
     std::function<void(const Preference&, Changes)> onChanged;
 

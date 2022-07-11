@@ -269,7 +269,7 @@ private:
 
     std::unique_ptr<Preference> m_pref=nullptr;
 
-    const std::string configDir = "~/.config/funterm/";
+    const std::string configDir = Glib::get_user_config_dir() + "/funterm/";
     const std::string prefFile = "pref.txt";
 
 

@@ -23,9 +23,9 @@ void Preference::PreferenceFromDialog() {
 
     textScrollLines->set_text(Glib::ustring::format("%d", m_scrollLines));
 
-    pref_custom_font_checked->set_active(this->font_name != nullptr);
-    if(this->font_name!= nullptr) {
-        gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(pref_custom_font->gobj()), this->font_name);
+    pref_custom_font_checked->set_active(this->font_desc != nullptr);
+    if(this->font_desc != nullptr) {
+        gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(pref_custom_font->gobj()), this->font_desc);
     }
 
     pref_custom_font->signal_font_set().connect([this, matchDialog, pref_custom_font, pref_custom_font_checked](){
@@ -38,7 +38,7 @@ void Preference::PreferenceFromDialog() {
             if(desc) {
                 FUN_DEBUG("font desc str:%s", pango_font_description_to_string(desc));
             }
-            this->font_name = desc;
+            this->font_desc = desc;
             this->font_size = size/1000;
         }
         FUN_DEBUG("font %d", size);
@@ -78,9 +78,9 @@ void Preference::SavePrefs() {
 
 std::string Preference::ToString() {
     std::string s;
-    s+= pango_font_description_to_string(this->font_name);
+    s+= pango_font_description_to_string(this->font_desc);
     return s;
 }
 void Preference::FromString(std::string fileContext) {
-    this->font_name = pango_font_description_from_string(fileContext.c_str());
+    this->font_desc = pango_font_description_from_string(fileContext.c_str());
 }
