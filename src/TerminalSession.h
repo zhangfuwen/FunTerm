@@ -226,6 +226,8 @@ public:
     void CopyText();
     void PasteText();
     void UpdatePreference(const Preference & pref, Changes changes);
+    void FontZoomUp();
+    void FontZoomDown();
 
     ~TerminalSession() override {}
 

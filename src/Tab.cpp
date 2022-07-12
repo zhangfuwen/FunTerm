@@ -14,6 +14,8 @@ TabTitle::TabTitle(const Glib::ustring & text, Tab *tab) {
     });
     m_closeButton->set_relief(Gtk::RELIEF_NONE);
 
+    m_titleTex->set_has_frame(false);
+
     pack_start(*m_titleTex);
     pack_end(*m_closeButton);
     show_all();

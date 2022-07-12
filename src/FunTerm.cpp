@@ -103,7 +103,7 @@ static int SplitTerm(Gtk::Orientation ori) {
 }
 
 int main(int argc, char *argv[]) {
-
+    signal(SIGSEGV, signal_handler);
     // funterm
     Gio::init();
     app = Gtk::Application::create("fun.xjbcode.funterm", Gio::APPLICATION_HANDLES_COMMAND_LINE);
@@ -222,6 +222,7 @@ int main(int argc, char *argv[]) {
     gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER   (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     const gchar* path_to_css = RES_FILE_DIR "/style.css";
+    FUN_INFO("loading css file %s", path_to_css);
     GError *error = 0;
     gtk_css_provider_load_from_file(provider, g_file_new_for_path(path_to_css), &error);
 

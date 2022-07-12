@@ -427,7 +427,24 @@ void TerminalSession::ShowMatchDialog() {
     matchDialog->show_all();
     matchDialog->signal_response().connect([this](int id) { RefreshMatch(); });
 }
+gboolean scroll_cb ( GtkWidget* self, GdkEventScroll* event, gpointer user_data)
+{
+    FUN_INFO("scroll cb %08X, %08X", event->state, event->type);
+    TerminalSession *sess = (TerminalSession *)user_data;
+    auto dir = event->direction;
+    if(event->direction == GDK_SCROLL_SMOOTH) {
+         dir = (event->delta_y <= 0)? GDK_SCROLL_UP : GDK_SCROLL_DOWN;
+    }
+    if((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_UP)) {
+        sess->FontZoomUp();
+        return true;
+    } else if((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_DOWN)) {
+        sess->FontZoomDown();
+        return true;
+    }
 
+    return false;
+}
 gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
     //    FUN_INFO("event %c, %s", (char)event->keyval, event->string);
     if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK) && ((char)event->keyval == 'F')) {
@@ -488,6 +505,7 @@ void TerminalSession::InitTerminal() {
     vte_terminal_set_color_foreground(term, backgroundColor);
     m_terminal = term;
     g_signal_connect(m_terminal, "key-press-event", G_CALLBACK(key_press_cb), this);
+    g_signal_connect(m_terminal, "scroll-event", G_CALLBACK(scroll_cb), this);
     g_signal_connect(m_terminal, "selection-changed", G_CALLBACK(selection_changed), this);
     g_signal_connect(m_terminal, "notification-received", G_CALLBACK(notification_received), this);
 
@@ -739,6 +757,7 @@ void TerminalSession::InitTitleBox() {
     auto bgcolor = buttonMax->get_style_context()->get_background_color();
     auto color2 = buttonMax->get_style_context()->get_border_color();
 
+
     FUN_DEBUG("color %s", color.to_string().c_str());
     FUN_DEBUG("bgcolor %s", bgcolor.to_string().c_str());
     for (auto clazz : buttonMax->get_style_context()->list_classes()) {
@@ -818,4 +837,29 @@ void TerminalSession::dualSplit(Gtk::Paned &paned, int w, int h) {
         h /= 2;
         paned.set_position(h);
     }
+}
+
+
+void TerminalSession::FontZoomUp() {
+    auto desc = vte_terminal_get_font(m_terminal);
+    auto newDesc = pango_font_description_copy(desc);
+    auto size = pango_font_description_get_size(desc);
+    FUN_INFO("%d", size);
+    size+=1000;
+    pango_font_description_set_size(newDesc, size);
+    vte_terminal_set_font(m_terminal, newDesc);
+    pango_font_description_free(newDesc);
+}
+void TerminalSession::FontZoomDown() {
+    FUN_INFO("");
+    auto desc = vte_terminal_get_font(m_terminal);
+    auto newDesc = pango_font_description_copy(desc);
+    auto size = pango_font_description_get_size(desc);
+    size-=1000;
+    if(size < 0) {
+        size = 1000;
+    }
+    pango_font_description_set_size(newDesc, size);
+    vte_terminal_set_font(m_terminal, newDesc);
+    pango_font_description_free(newDesc);
 }
