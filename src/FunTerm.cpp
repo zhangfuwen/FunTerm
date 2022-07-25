@@ -104,6 +104,11 @@ static int SplitTerm(Gtk::Orientation ori) {
 
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, signal_handler);
+
+    setlocale (LC_ALL, "");
+    bindtextdomain (GETTEXT_PACKAGE, RES_FILE_DIR "/language");
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    textdomain (GETTEXT_PACKAGE);
     // funterm
     Gio::init();
     app = Gtk::Application::create("fun.xjbcode.funterm", Gio::APPLICATION_HANDLES_COMMAND_LINE);

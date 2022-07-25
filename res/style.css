@@ -6,7 +6,15 @@ image-button {
     line-height: 70%;
     height: 70%;
 }
-
+.my-entry {
+    solid-color: black;
+    background-color: black;
+    color: black;
+    border-color: black;
+    flood-color: black;
+    lighting-color: black;
+    accent-color: black;
+}
 .circular {
     /*border-color: aqua;*/
 }

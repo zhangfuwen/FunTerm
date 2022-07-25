@@ -11,7 +11,7 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
     static int id = 0;
     id++;
     m_id = id;
-    Gtk::Widget::set_name("Sess-" + std::to_string(id));
+    Gtk::Widget::set_name(_("Sess-") + std::to_string(id));
     FUN_INFO("creating session %d", id);
 
     InitTerminal();
@@ -65,7 +65,7 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
 void TerminalSession::InitMatchBox() {
     m_matchBox = new Gtk::Box();
     auto checkMatch = new Gtk::CheckButton();
-    checkMatch->set_tooltip_text("toggle highlight matches");
+    checkMatch->set_tooltip_text(_("toggle highlight matches"));
     checkMatch->signal_toggled().connect([this, checkMatch]() {
         FUN_DEBUG("match toggle %d", checkMatch->get_active());
         m_highlightMatch = checkMatch->get_active();
@@ -76,7 +76,7 @@ void TerminalSession::InitMatchBox() {
 
     auto butConfig = new Gtk::Button();
     butConfig->set_image_from_icon_name("emblem-system-symbolic", Gtk::ICON_SIZE_MENU);
-    butConfig->set_tooltip_text("Manage highlight words");
+    butConfig->set_tooltip_text(_("Manage highlight words"));
     butConfig->signal_clicked().connect([this]() { ShowMatchDialog(); });
     butConfig->set_relief(Gtk::RELIEF_NONE);
 
@@ -574,41 +574,41 @@ void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) 
 void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
     m_popupMenu.Clear();
 
-    auto itemCopy = std::make_unique<Gtk::MenuItem>("Copy", true);
+    auto itemCopy = std::make_unique<Gtk::MenuItem>(_("Copy"), true);
     //            itemCopy->set_related_action(Gtk::Action::create("copy", "copy", "copy"));
     itemCopy->signal_button_press_event().connect([this](GdkEventButton *ev) {
         CopyText();
         return true;
     });
-    auto itemPaste = std::make_unique<Gtk::MenuItem>("Paste", true);
+    auto itemPaste = std::make_unique<Gtk::MenuItem>(_("Paste"), true);
     itemPaste->signal_button_press_event().connect([this](GdkEventButton *ev) {
         PasteText();
         return true;
     });
 
-    auto itemSearch = std::make_unique<Gtk::MenuItem>("Search", false);
+    auto itemSearch = std::make_unique<Gtk::MenuItem>(_("Search"), false);
     itemSearch->signal_button_press_event().connect([this](GdkEventButton *ev) {
         ToggleSearch();
         return true;
     });
-    auto itemHighlight = std::make_unique<Gtk::MenuItem>("Highlight Management", false);
+    auto itemHighlight = std::make_unique<Gtk::MenuItem>(_("Highlight Management"), false);
     itemHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
         ToggleMatch();
         return true;
     });
 
-    auto itemSearchSelected = std::make_unique<Gtk::MenuItem>("Search Selected", false);
+    auto itemSearchSelected = std::make_unique<Gtk::MenuItem>(_("Search Selected"), false);
     itemSearchSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
         ToggleSearch(m_selectionText, true);
         return true;
     });
-    auto itemHighlightSelected = std::make_unique<Gtk::MenuItem>("Highlight Selected", false);
+    auto itemHighlightSelected = std::make_unique<Gtk::MenuItem>(_("Highlight Selected"), false);
     itemHighlightSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
         AddHighlight(m_selectionText);
         return true;
     });
 
-    auto itemCopyPath = std::make_unique<Gtk::MenuItem>("Copy Path", false);
+    auto itemCopyPath = std::make_unique<Gtk::MenuItem>(_("Copy Path"), false);
     itemCopyPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
         auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
@@ -621,7 +621,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
         return true;
     });
 
-    auto itemOpenPath = std::make_unique<Gtk::MenuItem>("Open Path", false);
+    auto itemOpenPath = std::make_unique<Gtk::MenuItem>(_("Open Path"), false);
     itemOpenPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
         auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
@@ -632,7 +632,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
         return true;
     });
 
-    auto itemPreference = std::make_unique<Gtk::MenuItem>("Preference", true);
+    auto itemPreference = std::make_unique<Gtk::MenuItem>(_("Preference"), true);
     itemPreference->signal_button_press_event().connect([this](GdkEventButton *ev) {
         if (m_pref != nullptr) {
             m_pref->PreferenceFromDialog();
@@ -641,7 +641,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
     });
     if (vte_terminal_get_has_selection(m_terminal)) {
         if (m_highlightedTexts.count(m_selectionText)) {
-            auto itemRemoveHighlight = std::make_unique<Gtk::MenuItem>("Remove Highlight", true);
+            auto itemRemoveHighlight = std::make_unique<Gtk::MenuItem>(_("Remove Highlight"), true);
             itemRemoveHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
                 m_highlightedTexts.erase(m_selectionText);
                 vte_terminal_highlight_clear(m_terminal);

@@ -178,9 +178,9 @@ public:
         caseSensitiveSearch.set_relief(Gtk::RELIEF_NONE);
         regexSearch.set_relief(Gtk::RELIEF_NONE);
         wholeWord.set_relief(Gtk::RELIEF_NONE);
-        caseSensitiveSearch.set_tooltip_text("Case-sensitive Search");
-        regexSearch.set_tooltip_text("Search with regular expresion");
-        wholeWord.set_tooltip_text("Search with whole word");
+        caseSensitiveSearch.set_tooltip_text(_("Case-sensitive Search"));
+        regexSearch.set_tooltip_text(_("Search with regular expresion"));
+        wholeWord.set_tooltip_text(_("Search with whole word"));
 
         next.set_image_from_icon_name("go-down-symbolic", Gtk::ICON_SIZE_MENU);
         prev.set_image_from_icon_name("go-up-symbolic", Gtk::ICON_SIZE_MENU);

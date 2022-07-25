@@ -2,11 +2,12 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 ColumnLimit: 120
 
-# private, public
-AccessModifierOffset: -4
-
 BinPackArguments: false
 BinPackParameters: false
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: Align
 IndentCaseLabels: true
 AllowAllParametersOfDeclarationOnNextLine: false
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AllowAllArgumentsOnNextLine: true
+PackConstructorInitializers: Never

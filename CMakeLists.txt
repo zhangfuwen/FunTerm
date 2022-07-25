@@ -62,6 +62,19 @@ message("CMAKE_INSTALL_FULL_LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR}")
 
 find_package(PkgConfig REQUIRED)
 
+file(GLOB_RECURSE SRCS ${CMAKE_SOURCE_DIR}/src/*.cpp ${CMAKE_SOURCE_DIR}/src/*.h)
+message("SRCS ${SRCS}")
+
+add_custom_target(translation_text
+        COMMAND xgettext -j -k_ -o res/language/zh_CN/LC_MESSAGES/messages.po ${SRCS}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+
+add_custom_target(translation_binary
+        COMMAND msgfmt -o res/language/zh_CN/LC_MESSAGES/messages.mo res/language/zh_CN/LC_MESSAGES/messages.po
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+
 
 pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) #
 #pkg_check_modules(VTE REQUIRED vte-2.91) #  apt install libvte-2.91-dev
@@ -80,6 +93,7 @@ add_executable(funterm src/FunTerm.cpp
 
 add_dependencies(funterm configor)
 add_dependencies(funterm handycpp)
+add_dependencies(funterm translation_binary)
 target_include_directories(funterm
         PRIVATE
         gen_headers
@@ -143,7 +157,7 @@ INSTALL(FILES res/headerbar.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/d
 INSTALL(FILES res/style.css DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/funterm.png DESTINATION /usr/share/icons/hicolor/48x48/apps/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES res/funterm.conf DESTINATION /etc/rsyslog.d/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(FILES language/zh_CN/LC_MESSAGES/messages.mo DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data/language/zh_CN/LC_MESSAGES/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
+INSTALL(FILES res/language/zh_CN/LC_MESSAGES/messages.mo DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data/language/zh_CN/LC_MESSAGES/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/fun.xjbcode.funterm.gschema.xml DESTINATION /usr/share/glib-2.0/schemas)
 
 INCLUDE(CPack)

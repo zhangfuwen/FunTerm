@@ -1,0 +1,177 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-07-25 17:30+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/Engine.cpp:357
+msgid "label_input_mode"
+msgstr "输入模式"
+
+#: src/Engine.cpp:367
+msgid "label_pinyin"
+msgstr "使用拼音词库"
+
+#: src/Engine.cpp:379
+msgid "preference"
+msgstr "首选项"
+
+#: src/Engine.cpp:391
+msgid "label_wubi_table_no"
+msgstr "不使用五笔词库"
+
+#: src/Engine.cpp:401
+msgid "label_wubi_table_86"
+msgstr "使用五笔86词库"
+
+#: src/Engine.cpp:411
+msgid "label_wubi_table_98"
+msgstr "使用五笔98词库"
+
+#: src/Engine.cpp:425
+msgid "wubi"
+msgstr "五笔词库"
+
+#: src/Engine.cpp:466
+msgid "label_orientation_system"
+msgstr "跟随系统"
+
+#: src/Engine.cpp:468
+msgid "tooltip_orientation_system"
+msgstr "跟随系统"
+
+#: src/Engine.cpp:475
+msgid "label_orientation_horizontal"
+msgstr "横向"
+
+#: src/Engine.cpp:477
+msgid "tooltip_orientation_horizontal"
+msgstr "纵向"
+
+#: src/Engine.cpp:485
+msgid "label_orientation_vertical"
+msgstr "纵向"
+
+#: src/Engine.cpp:487
+msgid "tooltip_orientation_vertical"
+msgstr "纵向"
+
+#: src/Engine.cpp:497
+msgid "label_orientation"
+msgstr "候选词排列方向"
+
+#: src/Engine.cpp:498
+msgid "tooltip_orientation"
+msgstr "候选词排列方向"
+
+msgid "label_fast_input_enabled"
+msgstr "快捷输入"
+
+msgid "label_wubi"
+msgstr "使用五笔输入法"
+
+msgid "label_preference"
+msgstr "首选项"
+
+#: src/TerminalSession.cpp:245
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:245
+msgid "pattern"
+msgstr "模式"
+
+#: src/TerminalSession.cpp:246
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:246
+msgid "Case Sensitive"
+msgstr "大小写敏感"
+
+#: src/TerminalSession.cpp:247
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:247
+msgid "Whole word"
+msgstr "全词"
+
+#: src/TerminalSession.cpp:248
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:248
+msgid "Regex"
+msgstr "正则"
+
+#: src/TerminalSession.cpp:249 src/TerminalSession.cpp:290
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:249
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:290
+msgid "delete"
+msgstr "删除"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:14
+msgid "Sess-"
+msgstr "会话-"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:68
+msgid "toggle highlight matches"
+msgstr "切换匹配词是否高亮"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:79
+msgid "Manage highlight words"
+msgstr "管理高亮词"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:577
+msgid "Copy"
+msgstr "复制"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:583
+msgid "Paste"
+msgstr "粘贴"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:589
+msgid "Search"
+msgstr "搜索"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:594
+msgid "Highlight Management"
+msgstr "高亮管理"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:600
+msgid "Search Selected"
+msgstr "搜索选中内容"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:605
+msgid "Highlight Selected"
+msgstr "高亮选中内容"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:611
+msgid "Copy Path"
+msgstr "复制路径"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:624
+msgid "Open Path"
+msgstr "打开路径"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:635
+msgid "Preference"
+msgstr "首选项"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.cpp:644
+msgid "Remove Highlight"
+msgstr "取消高亮"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.h:181
+msgid "Case-sensitive Search"
+msgstr "大小写敏感"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.h:182
+msgid "Search with regular expresion"
+msgstr "正则搜索"
+
+#: /home/larkos/Code/FunTerm/src/TerminalSession.h:183
+msgid "Search with whole word"
+msgstr "全词搜索"
