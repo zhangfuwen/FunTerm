@@ -3,7 +3,7 @@
     <schema id="fun.xjbcode.funterm" path="/fun/xjbcode/funterm/">
         <!-- Intervals -->
         <key name="scroll-lines" type="i">
-            <default>100000</default>
+            <default>10000</default>
             <summary>scroll lines</summary>
             <description>number of lines of history</description>
         </key>
