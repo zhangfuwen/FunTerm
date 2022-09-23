@@ -6,6 +6,7 @@
 #include <gtkmm/filechooser.h>
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/window.h>
+#include "funterm_config.h"
 
 //#include <libnautilus-extension/nautilus-extension-types.h>
 
@@ -39,7 +40,7 @@ static void do_file_item_cb(NautilusMenuItem *item, gpointer user_data) {
     auto uri = nautilus_file_info_get_uri(file);
     g_print("doing stuff with %s\n", name);
     using namespace std::string_literals;
-    system(("/usr/bin/funterm "s + uri).c_str());
+    system((BIN_DIR "/funterm "s + uri).c_str());
 
     g_free(uri);
     g_free(name);
@@ -50,7 +51,7 @@ static void do_background_item_cb(NautilusMenuItem *item, gpointer user_data) {
     using namespace std::string_literals;
     g_print("-doing stuff with %s\n", uri);
     //system(("/usr/bin/funterm "s + uri + " &").c_str());
-    system(("/usr/bin/funterm "s + " --tab " + uri + " &").c_str());
+    system((BIN_DIR"/funterm "s + " --tab " + uri + " &").c_str());
     g_free(uri);
 }
 

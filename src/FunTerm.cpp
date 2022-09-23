@@ -116,8 +116,12 @@ int main(int argc, char *argv[]) {
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "vert", 'v', "file system uri");
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "tab", 't', "file system uri");
 
-    builder = Gtk::Builder::create_from_file( RES_FILE_DIR "/funterm.glade");
     std::cout << RES_FILE_DIR << std::endl;
+    if(!std::filesystem::is_regular_file(RES_FILE_DIR "/funterm.glade")) {
+        FUN_ERROR("file does not exist: %s", RES_FILE_DIR "/funterm.glade");
+        return -1;
+    }
+    builder = Gtk::Builder::create_from_file( RES_FILE_DIR "/funterm.glade");
 
     // headerbar
     Gtk::HeaderBar * headerbar ;

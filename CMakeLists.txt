@@ -79,6 +79,9 @@ add_custom_target(translation_binary
 pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) #
 #pkg_check_modules(VTE REQUIRED vte-2.91) #  apt install libvte-2.91-dev
 
+configure_file(res/funterm.desktop.in ${CMAKE_BINARY_DIR}/res/funterm.desktop)
+configure_file(src/funterm_config.h.in ${PROJECT_BINARY_DIR}/include/funterm_config.h)
+include_directories(${PROJECT_BINARY_DIR}/include)
 add_custom_command(OUTPUT gen_headers/preference_dialog.ui.h
         COMMAND mkdir ${CMAKE_SOURCE_DIR}/gen_headers || true && ${CMAKE_SOURCE_DIR}/src/glade_code_gen --filename=${CMAKE_SOURCE_DIR}/res/preference_dialog.glade --quiet=true > ${CMAKE_SOURCE_DIR}/gen_headers/preference_dialog.ui.h
         )
@@ -119,7 +122,7 @@ endif ()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(funterm PRIVATE RES_FILE_DIR="${CMAKE_SOURCE_DIR}/res")
 else()
-    target_compile_definitions(funterm PRIVATE RES_FILE_DIR="/usr/share/funterm/data/")
+	target_compile_definitions(funterm PRIVATE RES_FILE_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/funterm/data/")
 endif()
 #target_compile_options(funterm PRIVATE  -Wl,--no-enable-new-dtags -Wl,-rpath,${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/)
 
@@ -143,13 +146,13 @@ set(CPACK_PACKAGE_VERSION "1.1")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA, "scripts/prerm;scripts/postrm;scripts/preinst;scripts/postinst")
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libvte")
 
-INSTALL(FILES res/funterm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/res/funterm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/etc/profile.d/vte.sh DESTINATION /etc/profile.d/vte-funterm.sh PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/libvte-2.91.so.0.6900.0 DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(TARGETS funterm DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
-INSTALL(TARGETS nautilus_funterm DESTINATION lib/x86_64-linux-gnu/nautilus/extensions-3.0/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
+INSTALL(TARGETS nautilus_funterm DESTINATION /usr/lib/x86_64-linux-gnu/nautilus/extensions-3.0/ PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES res/funterm.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/match_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)
 INSTALL(FILES res/preference_dialog.glade DESTINATION ${CMAKE_INSTALL_DATADIR}/funterm/data PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ)

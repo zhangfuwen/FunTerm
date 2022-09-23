@@ -37,6 +37,33 @@ This project depends on a slightly modified version of libvte, source code can b
 
 Modifications are meant to support text highlighting (which is officially supported by vte for now and I copied a patch from [here](https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/7771#note_1175694).
 
+# Build & install
+
+
+```bash
+sudo apt install -y python3-pip ; 
+sudo pip3 install meson==0.61.2
+sudo apt install gnutls-bin \
+ libgnutls30 \
+ libsystemd-dev \
+ valac \
+ gobject-introspection \
+ python3-gi \
+ libgirepository1.0-dev \
+ libvte-dev \
+ libgnutls* \
+ libibus-1.0-dev \
+ libgtkmm-3.0-dev \
+ g++ \
+ libpulse-dev \
+ libpsl-dev \
+ libbrotli-dev \
+ ninja-build
+ 
+cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -G "Ninja"
+cmake --build  build 
+```
+
 # Contribution
 
 Feel free to send me a pull request, whether it being a refactor(maybe huge, since current code is mess), a feature enhancement or fixing a spelling error.
