@@ -1,10 +1,10 @@
 [Desktop Entry]
-Categories=Utilities;
+Categories=Utility;
 Comment=Fun Terminal
-Exec=@CMAKE_INSTALL_PREFIX@/bin/funterm %u
+Exec=funterm %u
 GenericName=Fun Terminal
 Icon=funterm
 Keywords=funterm;
-Name=Fun终端
+Name=FunTerm
 Type=Application
 X-Deepin-Vendor=user-custom
