@@ -18,9 +18,9 @@
 #include "configor/json.hpp"
 
 #include "PanedContainer.h"
+#include "Preference.h"
 #include "Tab.h"
 #include "TitleEntry.h"
-#include "Preference.h"
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -33,37 +33,37 @@ class TerminalSession;
 extern TerminalSession *lastFocusTerm;
 
 const HighlightStyle defaultStyle = {
-    .back= 11,
+    .back     = 11,
     .backmask = 0xffffffff,
 };
 const std::vector<HighlightStyle> styles = {
-    HighlightStyle {
-        .back= 11,
+    HighlightStyle{
+        .back     = 11,
         .backmask = 0xffffffff,
 
     },
-    HighlightStyle {
-        .back= 04,
+    HighlightStyle{
+        .back     = 04,
         .backmask = 0xffffffff,
 
     },
-    HighlightStyle {
-        .back= 0x04,
+    HighlightStyle{
+        .back     = 0x04,
         .backmask = 0xffffffff,
 
     },
-    HighlightStyle {
-        .back= 0x03,
+    HighlightStyle{
+        .back     = 0x03,
         .backmask = 0xffffffff,
 
     },
-    HighlightStyle {
-        .back= 0x09,
+    HighlightStyle{
+        .back     = 0x09,
         .backmask = 0xffffffff,
 
     },
-    HighlightStyle {
-        .back= 0x05,
+    HighlightStyle{
+        .back     = 0x05,
         .backmask = 0xffffffff,
     },
 };
@@ -71,103 +71,87 @@ const std::vector<HighlightStyle> styles = {
 inline HighlightStyle getRandomStyle() {
     static int i = 0;
     i++;
-    if(i>= styles.size()) {
-        i=0;
+    if (i >= styles.size()) {
+        i = 0;
     }
     return styles[i];
 }
 
-
-gboolean key_press_cb (
-    GtkWidget* self,
-    GdkEventKey *event,
-    gpointer user_data
-);
+gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data);
 
 struct RegexMatch {
-    RegexMatch(std::string t) : text(t) {}
+    RegexMatch(std::string t)
+        : text(t) {}
     ~RegexMatch() {
-        if(pattern) {
+        if (pattern) {
             vte_regex_unref(pattern);
         }
     }
-    void CompileForMatch();
-    void CompileForSearch();
-    std::string text = "";
-    bool caseSensitive = false;
-    bool regex = false;
-    bool wholeWord = false;
-    VteRegex * pattern = nullptr;
+    void        CompileForMatch();
+    void        CompileForSearch();
+    std::string text          = "";
+    bool        caseSensitive = false;
+    bool        regex         = false;
+    bool        wholeWord     = false;
+    VteRegex   *pattern       = nullptr;
 };
 
 class ContextMenu : private Gtk::Menu {
-public:
-    void Add(std::unique_ptr<Gtk::MenuItem> && item) {
+  public:
+    void Add(std::unique_ptr<Gtk::MenuItem> &&item) {
         this->add(*item);
         m_items.push_back(std::move(item));
     }
 
-    void Clear() {
-        m_items.clear();
-    }
+    void Clear() { m_items.clear(); }
 
-    void Show(GdkEvent * ev) {
+    void Show(GdkEvent *ev) {
         this->show_all();
-        this->popup_at_pointer((GdkEvent*)ev);
+        this->popup_at_pointer((GdkEvent *)ev);
     }
-    bool Empty() {
-        return m_items.empty();
-    }
+    bool Empty() { return m_items.empty(); }
 
-private:
+  private:
     std::vector<std::unique_ptr<Gtk::MenuItem>> m_items;
 };
 
 class SearchBox : private Gtk::Box {
-public:
+  public:
     struct SearchStatus {
         Glib::ustring text;
-        bool caseSensitive;
-        bool wholeWord;
-        bool regexSearch;
+        bool          caseSensitive;
+        bool          wholeWord;
+        bool          regexSearch;
     };
 
-    operator Gtk::Box&() {
-        return *this;
-    }
+    operator Gtk::Box &() { return *this; }
 
     SearchStatus GetStatus() {
         SearchStatus status;
-        status.wholeWord = wholeWord.get_active();
-        status.regexSearch = regexSearch.get_active();
+        status.wholeWord     = wholeWord.get_active();
+        status.regexSearch   = regexSearch.get_active();
         status.caseSensitive = caseSensitiveSearch.get_active();
-        status.text = search.get_text();
+        status.text          = search.get_text();
         return status;
     }
 
-    auto signal_next_match() {
-        return search.signal_next_match();
-    }
-    auto signal_search_changed() {
-        return search.signal_search_changed();
-    }
+    auto signal_next_match() { return search.signal_next_match(); }
+    auto signal_search_changed() { return search.signal_search_changed(); }
     auto signal_next_clicked() { return next.signal_clicked(); }
     auto signal_prev_clicked() { return prev.signal_clicked(); }
     auto signal_close_clicked() { return close.signal_clicked(); }
 
-private:
-    Gtk::SearchEntry search;
+  private:
+    Gtk::SearchEntry  search;
     Gtk::ToggleButton caseSensitiveSearch;
     Gtk::ToggleButton regexSearch;
     Gtk::ToggleButton wholeWord;
-    Gtk::Button next;
-    Gtk::Button prev;
-    Gtk::Button close;
+    Gtk::Button       next;
+    Gtk::Button       prev;
+    Gtk::Button       close;
 
-public:
-    void SetText(const Glib::ustring& text) {
-        search.set_text(text);
-    }
+  public:
+    void SetText(const Glib::ustring &text) { search.set_text(text); }
     SearchBox() {
         caseSensitiveSearch.set_label("Cc");
         regexSearch.set_label(".*");
@@ -202,12 +186,11 @@ public:
         set_valign(Gtk::ALIGN_CENTER);
         next.set_can_focus(true);
     }
-
 };
 class TerminalSession : public Gtk::Paned {
-public:
+  public:
     PanedContainer *GetParent() { return dynamic_cast<PanedContainer *>(this->get_parent()); }
-    Tab *GetTab() { return m_tab; }
+    Tab            *GetTab() { return m_tab; }
     explicit TerminalSession(Tab *tab, std::string workingDir = "");
     void InitTitleBox();
     void InitTerminal();
@@ -220,61 +203,58 @@ public:
     void Split(TerminalSession *new_sess, Gtk::Orientation orient = Gtk::ORIENTATION_HORIZONTAL);
     void ToggleSearch(const Glib::ustring &text = "", bool showOnly = false);
     void ToggleMatch(const Glib::ustring &text = "", bool showOnly = false);
-    bool OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry * label);
+    bool OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label);
     void HideTitle();
     void ShowTitle();
     void CopyText();
     void PasteText();
-    void UpdatePreference(const Preference & pref, Changes changes);
+    void UpdatePreference(const Preference &pref, Changes changes);
     void FontZoomUp();
     void FontZoomDown();
 
     ~TerminalSession() override {}
 
-private:
-    int m_id = 0;
+  private:
+    int         m_id       = 0;
     std::string workingDir = "";
 
     // root tab
     Tab *m_tab = nullptr;
 
     // topbar
-    bool m_showTitle = true;
-    Gtk::Box *m_topBar = nullptr; // place holder
-    Gtk::Box *titleBox = nullptr;
-    std::unique_ptr<SearchBox> searchBox = nullptr;
-    Gtk::Box *m_topBarOldBox = nullptr;
-    Gtk::Box *m_matchBox = nullptr;
-    bool m_highlightMatch = true;
-    VteRegex  * searchRegex = nullptr;
-    std::vector<RegexMatch> matchRegexes;
+    bool                       m_showTitle      = true;
+    Gtk::Box                  *m_topBar         = nullptr; // place holder
+    Gtk::Box                  *titleBox         = nullptr;
+    std::unique_ptr<SearchBox> searchBox        = nullptr;
+    Gtk::Box                  *m_topBarOldBox   = nullptr;
+    Gtk::Box                  *m_matchBox       = nullptr;
+    bool                       m_highlightMatch = true;
+    VteRegex                  *searchRegex      = nullptr;
+    std::vector<RegexMatch>    matchRegexes;
 
     // bottombar
-    Gtk::Box *m_bottomBar = nullptr;
-    Gtk::Widget *vte = nullptr;
-    VteTerminal  *m_terminal = nullptr;
-    Gtk::VScrollbar * scroll = nullptr;
+    Gtk::Box        *m_bottomBar = nullptr;
+    Gtk::Widget     *vte         = nullptr;
+    VteTerminal     *m_terminal  = nullptr;
+    Gtk::VScrollbar *scroll      = nullptr;
 
-    friend gboolean key_press_cb ( GtkWidget* self,
-        GdkEventKey *event,
-        gpointer user_data
-        );
-    friend void selection_changed(VteTerminal *term, TerminalSession *sess);
+    friend gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data);
+    friend void     selection_changed(VteTerminal *term, TerminalSession *sess);
 
-    void RefreshMatch();
-    void AddHighlight(const RegexMatch &m, const HighlightStyle & style = defaultStyle) const;
-    void AddHighlight(const Glib::ustring &text);
+    void                            RefreshMatch();
+    void                            AddHighlight(const RegexMatch &m, const HighlightStyle &style = defaultStyle) const;
+    void                            AddHighlight(const Glib::ustring &text);
     std::unordered_set<std::string> m_highlightedTexts;
 
     Glib::ustring m_selectionText;
-    ContextMenu  m_popupMenu;
+    ContextMenu   m_popupMenu;
 
-    std::unique_ptr<Preference> m_pref=nullptr;
+    std::unique_ptr<Preference> m_pref = nullptr;
 
     const std::string configDir = Glib::get_user_config_dir() + "/funterm/";
-    const std::string prefFile = "pref.txt";
+    const std::string prefFile  = "pref.txt";
 
-
+  public:
     void ShowContextMenu(const GdkEventButton *ev);
 };
 

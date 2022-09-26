@@ -6,27 +6,25 @@
 #define FUNTERM_TITLEENTRY_H
 #include <gtkmm.h>
 class TitleEntry : public Gtk::Entry {
-public:
-    TitleEntry() {
-        Disable();
-    }
+  public:
+    TitleEntry() { Disable(); }
 
     explicit TitleEntry(const Glib::ustring &str) {
         Disable();
         set_text(str);
     }
-protected:
 
+  protected:
     void on_editing_done() override {
         Disable();
         CellEditable::on_editing_done();
     }
     bool on_button_press_event(GdkEventButton *button_event) override {
-        if(button_event->type == GDK_2BUTTON_PRESS) {
+        if (button_event->type == GDK_2BUTTON_PRESS) {
             Enable();
             return true;
         }
-        if(this->get_editable() == false) { // when not editable, send event to container
+        if (this->get_editable() == false) { // when not editable, send event to container
             return false;
         }
         return Widget::on_button_press_event(button_event);
@@ -36,13 +34,13 @@ protected:
         return Widget::on_focus_out_event(gdk_event);
     }
     bool on_key_release_event(GdkEventKey *key_event) override {
-        if(key_event->keyval == GDK_KEY_Escape) {
+        if (key_event->keyval == GDK_KEY_Escape) {
             Disable();
         }
         return Widget::on_key_release_event(key_event);
     }
 
-public:
+  public:
     void Enable() {
         set_can_focus(true);
         set_has_frame(true);

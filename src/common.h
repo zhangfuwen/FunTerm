@@ -4,21 +4,21 @@
 
 #ifndef AUDIO_IME_COMMON_H
 #define AUDIO_IME_COMMON_H
-#include <glib/gi18n.h>
-#include <locale.h>
+#include "common_log.h"
+#include "configor/json.hpp"
 #include <filesystem>
 #include <fstream>
-#include "configor/json.hpp"
-#include "common_log.h"
+#include <glib/gi18n.h>
+#include <locale.h>
 
 struct CandidateAttr {
     bool _isPinyin;
-    explicit CandidateAttr(bool isPinyin = false) :_isPinyin(isPinyin) {}
+    explicit CandidateAttr(bool isPinyin = false)
+        : _isPinyin(isPinyin) {}
 };
 
-
 #define CONF_SECTION "engine/ibus_fun"
-#define CONF_NAME_ID "access_id"  // no captal letter allowed
+#define CONF_NAME_ID "access_id"         // no captal letter allowed
 #define CONF_NAME_SECRET "access_secret" // no captal letter allowed
 #define CONF_NAME_WUBI "wubi_table"
 #define CONF_NAME_PINYIN "pinyin_enable"
@@ -35,28 +35,28 @@ static inline std::string get_ibus_fun_user_data_dir() {
     return ret;
 }
 
-static inline std::map<std::string, std::string> load_fast_input_config(const std::string& filename = "") {
+static inline std::map<std::string, std::string> load_fast_input_config(const std::string &filename = "") {
     std::map<std::string, std::string> m;
     FUN_INFO("loading file %s", filename.c_str());
 
     std::string file_path;
-    if(filename.empty()) {
+    if (filename.empty()) {
         auto user_dir = get_ibus_fun_user_data_dir();
-        file_path = user_dir + "fast_input.json";
+        file_path     = user_dir + "fast_input.json";
     } else {
         file_path = filename;
     }
-    if(!std::filesystem::is_regular_file(file_path)) {
+    if (!std::filesystem::is_regular_file(file_path)) {
         FUN_ERROR("can't open irregular file %s", file_path.c_str());
         return m;
     }
 
     FUN_INFO("loading file %s", file_path.c_str());
-    std::ifstream ifs(file_path);
+    std::ifstream  ifs(file_path);
     configor::json j;
     try {
         ifs >> j;
-    } catch(std::exception &e) {
+    } catch (std::exception &e) {
         FUN_ERROR("failed to read configuration file, %s", e.what());
     }
     FUN_INFO("json size %d", j.size());
@@ -69,8 +69,8 @@ static inline std::map<std::string, std::string> load_fast_input_config(const st
 }
 
 static inline std::string exec(const char *cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
+    std::array<char, 128>                    buffer;
+    std::string                              result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
@@ -82,23 +82,19 @@ static inline std::string exec(const char *cmd) {
 }
 
 // trim from start (in place)
-static inline std::string& ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-                return !std::isspace(ch);
-            }));
+static inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
     return s;
 }
 
 // trim from end (in place)
-static inline std::string& rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-                return !std::isspace(ch);
-            }).base(), s.end());
+static inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
     return s;
 }
 
 // trim from both ends (in place)
-static inline std::string& trim(std::string &s) {
+static inline std::string &trim(std::string &s) {
     ltrim(s);
     rtrim(s);
     return s;

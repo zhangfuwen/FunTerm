@@ -13,9 +13,9 @@
 #include "common.h"
 #include "common_log.h"
 
-#include "configor/json.hpp"
-#include "TerminalSession.h"
 #include "Tab.h"
+#include "TerminalSession.h"
+#include "configor/json.hpp"
 
 #include <array>
 #include <cstdio>
@@ -26,8 +26,8 @@
 #include <string>
 
 Glib::RefPtr<Gtk::Application> app;
-Glib::RefPtr<Gtk::Builder> builder;
-Gtk::ApplicationWindow *win;
+Glib::RefPtr<Gtk::Builder>     builder;
+Gtk::ApplicationWindow        *win;
 
 void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
     if (filepath.empty()) {
@@ -50,8 +50,8 @@ void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
             FUN_ERROR("child \"%d\" does not exist", i);
             break;
         }
-        auto keyEntry = (Gtk::Entry *)grid->get_child_at(0, i);
-        auto cmdEntry = (Gtk::Entry *)grid->get_child_at(1, i);
+        auto keyEntry  = (Gtk::Entry *)grid->get_child_at(0, i);
+        auto cmdEntry  = (Gtk::Entry *)grid->get_child_at(1, i);
         auto keyString = keyEntry ? keyEntry->get_text() : "";
         auto cmdString = cmdEntry ? cmdEntry->get_text() : "";
         if (keyString.empty() || cmdString.empty()) {
@@ -82,33 +82,31 @@ void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
     }
 }
 
-
-TerminalSession * lastFocusTerm = nullptr;
-Gtk::Notebook * notebook;
+TerminalSession *lastFocusTerm = nullptr;
+Gtk::Notebook   *notebook;
 
 static int SplitTerm(Gtk::Orientation ori) {
-    if(notebook == nullptr) {
+    if (notebook == nullptr) {
         return -1;
     }
-    Tab * tab = (Tab *)notebook->get_nth_page(notebook->get_current_page());
-    if(tab == nullptr) {
+    Tab *tab = (Tab *)notebook->get_nth_page(notebook->get_current_page());
+    if (tab == nullptr) {
         return -1;
     }
-    if(lastFocusTerm == nullptr || !tab->HasTerminalSession(lastFocusTerm)) {
+    if (lastFocusTerm == nullptr || !tab->HasTerminalSession(lastFocusTerm)) {
         return -1;
     }
     lastFocusTerm->Split(new TerminalSession(tab), ori);
     return 0;
-
 }
 
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, signal_handler);
 
-    setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, RES_FILE_DIR "/language");
-    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-    textdomain (GETTEXT_PACKAGE);
+    setlocale(LC_ALL, "");
+    bindtextdomain(GETTEXT_PACKAGE, RES_FILE_DIR "/language");
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
     // funterm
     Gio::init();
     app = Gtk::Application::create("fun.xjbcode.funterm", Gio::APPLICATION_HANDLES_COMMAND_LINE);
@@ -117,15 +115,15 @@ int main(int argc, char *argv[]) {
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "tab", 't', "file system uri");
 
     std::cout << RES_FILE_DIR << std::endl;
-    if(!std::filesystem::is_regular_file(RES_FILE_DIR "/funterm.glade")) {
+    if (!std::filesystem::is_regular_file(RES_FILE_DIR "/funterm.glade")) {
         FUN_ERROR("file does not exist: %s", RES_FILE_DIR "/funterm.glade");
         return -1;
     }
-    builder = Gtk::Builder::create_from_file( RES_FILE_DIR "/funterm.glade");
+    builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/funterm.glade");
 
     // headerbar
-    Gtk::HeaderBar * headerbar ;
-    auto builder2 = Gtk::Builder::create_from_file(RES_FILE_DIR "/headerbar.glade");
+    Gtk::HeaderBar *headerbar;
+    auto            builder2 = Gtk::Builder::create_from_file(RES_FILE_DIR "/headerbar.glade");
     builder2->get_widget<Gtk::HeaderBar>("headerbar", headerbar);
     Gtk::Button *but_new_tab;
     builder2->get_widget<Gtk::Button>("but_new_tab", but_new_tab);
@@ -141,77 +139,73 @@ int main(int argc, char *argv[]) {
 
     builder->get_widget<Gtk::Notebook>("notebook", notebook);
     notebook->signal_page_added().connect([](Gtk::Widget *w, guint page_num) {
-        if(notebook->get_n_pages() == 1) {
+        if (notebook->get_n_pages() == 1) {
             notebook->set_show_tabs(false);
         } else {
             notebook->set_show_tabs(true);
         }
     });
     notebook->signal_page_removed().connect([](Gtk::Widget *w, guint page_num) {
-      if(notebook->get_n_pages() == 1) {
-          notebook->set_show_tabs(false);
-      } else {
-          notebook->set_show_tabs(true);
-      }
+        if (notebook->get_n_pages() == 1) {
+            notebook->set_show_tabs(false);
+        } else {
+            notebook->set_show_tabs(true);
+        }
     });
 
-
-    auto new_tab = [](Gtk::Notebook * notebook, std::string wd = "") {
-        static int tabId = notebook->get_n_pages();
-      auto *panned = new RootPanedContainer();
-      auto tab = new Tab(panned, "Tab-" + std::to_string(tabId));
-      panned->setId();
-      panned->setRoot();
-      auto termSess = new TerminalSession(tab, wd);
-      panned->add1(termSess);
-      tab->pack_start(*panned);
-      tab->AddToNotebook(*notebook);
-      panned->signal_terminal_num_changed().connect([tab](int num) {
-        if(num == 0) {
-            tab->Close();
-        }
-      });
-      panned->show_all_children(true);
-      notebook->show_all();
-      notebook->set_focus_child(*tab);
-      notebook->set_current_page(tabId);
-      tabId ++;
+    auto new_tab = [](Gtk::Notebook *notebook, std::string wd = "") {
+        static int tabId  = notebook->get_n_pages();
+        auto      *panned = new RootPanedContainer();
+        auto       tab    = new Tab(panned, "Tab-" + std::to_string(tabId));
+        panned->setId();
+        panned->setRoot();
+        auto termSess = new TerminalSession(tab, wd);
+        panned->add1(termSess);
+        tab->pack_start(*panned);
+        tab->AddToNotebook(*notebook);
+        panned->signal_terminal_num_changed().connect([tab](int num) {
+            if (num == 0) {
+                tab->Close();
+            }
+        });
+        panned->show_all_children(true);
+        notebook->show_all();
+        notebook->set_focus_child(*tab);
+        notebook->set_current_page(tabId);
+        tabId++;
     };
 
-    but_new_tab->signal_clicked().connect([new_tab]() {
-        new_tab(notebook);
-    });
+    but_new_tab->signal_clicked().connect([new_tab]() { new_tab(notebook); });
     new_tab(notebook);
-
 
     but_right_split->signal_clicked().connect([]() { SplitTerm(Gtk::ORIENTATION_HORIZONTAL); });
     but_below_split->signal_clicked().connect([]() { SplitTerm(Gtk::ORIENTATION_VERTICAL); });
 
+    app->signal_command_line().connect(
+        [&](const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd) -> int {
+            const auto options = cmd->get_options_dict();
+            if (!options) {
+                FUN_INFO("not options found");
+                return 0;
+            }
 
-    app->signal_command_line().connect([&](const Glib::RefPtr<Gio::ApplicationCommandLine> & cmd) -> int{
-      const auto options = cmd->get_options_dict();
-      if(!options) {
-          FUN_INFO("not options found");
-          return 0;
-      }
+            // Parse command-line arguments that were passed either to the primary (first) instance
+            // or to subsequent instances.
+            // Note that this parsing is happening in the primary (not local) instance.
+            bool          foo_value = false;
+            Glib::ustring uri;
+            if (auto ret = options->lookup_value("tab", uri); ret) {
+                FUN_INFO("uri %s", uri.substr(7).c_str());
+                new_tab(notebook, uri.substr(7));
+            } else {
+                FUN_INFO("uri not found");
+            }
+            app->activate();
 
-      //Parse command-line arguments that were passed either to the primary (first) instance
-      //or to subsequent instances.
-      //Note that this parsing is happening in the primary (not local) instance.
-      bool foo_value = false;
-      Glib::ustring uri;
-      if(auto ret = options->lookup_value("tab", uri); ret) {
-          FUN_INFO("uri %s", uri.substr(7).c_str());
-          new_tab(notebook, uri.substr(7));
-      } else {
-          FUN_INFO("uri not found");
-      }
-      app->activate();
-
-      //The local instance will eventually exit with this status code:
-      return EXIT_SUCCESS;
-
-    }, false);
+            // The local instance will eventually exit with this status code:
+            return EXIT_SUCCESS;
+        },
+        false);
 
     //    headerbar = new Gtk::HeaderBar();
     win->set_titlebar(*headerbar);
@@ -220,17 +214,17 @@ int main(int argc, char *argv[]) {
 
     win->set_title("Fun Terminal");
 
-
     GtkCssProvider *provider;
-    GdkDisplay *display;
-    GdkScreen *screen;
+    GdkDisplay     *display;
+    GdkScreen      *screen;
 
-    provider = gtk_css_provider_new ();
-    display = gdk_display_get_default ();
-    screen = gdk_display_get_default_screen (display);
-    gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER   (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    provider = gtk_css_provider_new();
+    display  = gdk_display_get_default();
+    screen   = gdk_display_get_default_screen(display);
+    gtk_style_context_add_provider_for_screen(
+        screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    const gchar* path_to_css = RES_FILE_DIR "/style.css";
+    const gchar *path_to_css = RES_FILE_DIR "/style.css";
     FUN_INFO("loading css file %s", path_to_css);
     GError *error = 0;
     gtk_css_provider_load_from_file(provider, g_file_new_for_path(path_to_css), &error);

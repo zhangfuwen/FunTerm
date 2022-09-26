@@ -14,9 +14,7 @@ G_DECLARE_FINAL_TYPE(NautilusFuntermMenuProvider,
                      NAUTILUS_FUNTERM,
                      MENU_PROVIDER,
                      GObject)
-void
-nautilus_funterm_menu_provider_load(GTypeModule* module);
+void nautilus_funterm_menu_provider_load(GTypeModule *module);
 G_END_DECLS
-
 
 #endif // FUNTERM_NAUTILUS_EXTENSION_H

@@ -5,9 +5,10 @@
 #include "TerminalSession.h"
 #include <pcre2.h>
 #include <vte/vte.h>
-TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
-    workingDir = wd;
-    m_tab = tab;
+TerminalSession::TerminalSession(Tab *tab, std::string wd)
+    : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
+    workingDir    = wd;
+    m_tab         = tab;
     static int id = 0;
     id++;
     m_id = id;
@@ -30,10 +31,11 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
 
     // setup content area
     m_bottomBar = new Gtk::Box();
-    scroll = new Gtk::VScrollbar();
+    scroll      = new Gtk::VScrollbar();
     m_bottomBar->add(*vte);
     m_bottomBar->add(*scroll);
     add2(*m_bottomBar);
+    m_bottomBar->signal_button_press_event().connect([](GdkEventButton *ev) { return true; });
 
     Gtk::Paned::set_focus_on_click(true);
     Gtk::Paned::set_can_focus(true);
@@ -45,9 +47,7 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
     });
     set_focus_child(*m_bottomBar);
     m_bottomBar->set_focus_child(*vte);
-    signal_size_allocate().connect([this](Gdk::Rectangle &rec) {
-        this->set_position(30);
-        });
+    signal_size_allocate().connect([this](Gdk::Rectangle &rec) { this->set_position(30); });
 
     m_pref = std::make_unique<Preference>(
         [this](const Preference &pref, Changes changes) { this->UpdatePreference(pref, changes); });
@@ -56,14 +56,14 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd) : Gtk::Paned(Gtk::ORI
         std::string text = handycpp::file::readText(configDir + prefFile);
         m_pref->FromString(text);
         Changes changes;
-        changes.cs_changed = false;
+        changes.cs_changed   = false;
         changes.font_changed = true;
         UpdatePreference(*m_pref, changes);
     }
 }
 
 void TerminalSession::InitMatchBox() {
-    m_matchBox = new Gtk::Box();
+    m_matchBox      = new Gtk::Box();
     auto checkMatch = new Gtk::CheckButton();
     checkMatch->set_tooltip_text(_("toggle highlight matches"));
     checkMatch->signal_toggled().connect([this, checkMatch]() {
@@ -106,7 +106,7 @@ void TerminalSession::RefreshMatch() {
 }
 void TerminalSession::AddHighlight(const RegexMatch &m, const HighlightStyle &style) const {
 
-    std::string s = m.text;
+    std::string      s = m.text;
     HighlightPattern pat;
     if (!m.caseSensitive) {
         pat.regex_flags |= PCRE2_CASELESS;
@@ -121,8 +121,8 @@ void TerminalSession::AddHighlight(const RegexMatch &m, const HighlightStyle &st
         s = "\\b" + s + "\\b";
     }
     pat.pattern = s.c_str();
-    pat.style = style;
-    pat.regex = true;
+    pat.style   = style;
+    pat.regex   = true;
     vte_terminal_highlight_add_pattern(m_terminal, pat);
 }
 
@@ -130,13 +130,13 @@ void TerminalSession::InitSearchBox() {
     searchBox = std::make_unique<SearchBox>();
     searchBox->signal_next_match().connect([this]() {
         auto status = searchBox->GetStatus();
-        auto text = status.text;
-        auto regex = vte_regex_new_for_search(text.c_str(), text.length() + 1, 0, nullptr);
+        auto text   = status.text;
+        auto regex  = vte_regex_new_for_search(text.c_str(), text.length() + 1, 0, nullptr);
         vte_terminal_search_set_regex(m_terminal, regex, 0);
         RegexMatch m(text);
         m.caseSensitive = status.caseSensitive;
-        m.regex = status.regexSearch;
-        m.wholeWord = status.wholeWord;
+        m.regex         = status.regexSearch;
+        m.wholeWord     = status.wholeWord;
         AddHighlight(m);
     });
     //    search->signal_insert_text().connect([](){
@@ -144,9 +144,9 @@ void TerminalSession::InitSearchBox() {
     //      return true;
     //    });
     searchBox->signal_search_changed().connect([this]() {
-        auto status = searchBox->GetStatus();
-        GError *error = nullptr;
-        auto text = status.text;
+        auto    status = searchBox->GetStatus();
+        GError *error  = nullptr;
+        auto    text   = status.text;
         guint32 compile_flags;
         compile_flags = PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_UCP | PCRE2_MULTILINE;
         if (!status.caseSensitive) {
@@ -205,8 +205,8 @@ void TerminalSession::ToggleMatch(const Glib::ustring &text, bool showOnly) {
 void TerminalSession::AddHighlight(const Glib::ustring &text) {
     RegexMatch m(text);
     m.caseSensitive = true;
-    m.regex = false;
-    m.wholeWord = false;
+    m.regex         = false;
+    m.wholeWord     = false;
     m_highlightedTexts.insert(text);
     AddHighlight(m, getRandomStyle());
 }
@@ -335,7 +335,7 @@ void RegexMatch::CompileForSearch() {
 void RegexMatch::CompileForMatch() {
     GError *error = nullptr;
     guint32 compile_flags;
-    compile_flags = PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_UCP | PCRE2_MULTILINE;
+    compile_flags     = PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_UCP | PCRE2_MULTILINE;
     auto pattern_text = text;
     if (!caseSensitive) {
         compile_flags |= PCRE2_CASELESS;
@@ -356,7 +356,7 @@ void RegexMatch::CompileForMatch() {
 }
 
 void TerminalSession::ShowMatchDialog() {
-    auto builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/match_dialog.glade");
+    auto      builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/match_dialog.glade");
     Gtk::Box *box;
     builder->get_widget<Gtk::Box>("win1", box);
 
@@ -400,16 +400,16 @@ void TerminalSession::ShowMatchDialog() {
             if (!keyEntry) {
                 FUN_DEBUG("failed to get entry");
             }
-            auto checkCase = (Gtk::CheckButton *)grid->get_child_at(1, i);
+            auto checkCase      = (Gtk::CheckButton *)grid->get_child_at(1, i);
             auto checkWholeWord = (Gtk::CheckButton *)grid->get_child_at(2, i);
-            auto checkRegex = (Gtk::CheckButton *)grid->get_child_at(3, i);
-            auto keyString = keyEntry ? keyEntry->get_text() : "";
+            auto checkRegex     = (Gtk::CheckButton *)grid->get_child_at(3, i);
+            auto keyString      = keyEntry ? keyEntry->get_text() : "";
             if (!keyString.empty()) {
                 RegexMatch regexMatch(keyString);
                 regexMatch.caseSensitive = checkCase->get_active();
                 FUN_DEBUG("caseSensitive %d", regexMatch.caseSensitive);
                 regexMatch.wholeWord = checkWholeWord->get_active();
-                regexMatch.regex = checkRegex->get_active();
+                regexMatch.regex     = checkRegex->get_active();
                 matchRegexes.emplace_back(regexMatch);
             }
         }
@@ -427,26 +427,33 @@ void TerminalSession::ShowMatchDialog() {
     matchDialog->show_all();
     matchDialog->signal_response().connect([this](int id) { RefreshMatch(); });
 }
-gboolean scroll_cb ( GtkWidget* self, GdkEventScroll* event, gpointer user_data)
-{
+gboolean scroll_cb(GtkWidget *self, GdkEventScroll *event, gpointer user_data) {
     FUN_INFO("scroll cb %08X, %08X", event->state, event->type);
     TerminalSession *sess = (TerminalSession *)user_data;
-    auto dir = event->direction;
-    if(event->direction == GDK_SCROLL_SMOOTH) {
-         dir = (event->delta_y <= 0)? GDK_SCROLL_UP : GDK_SCROLL_DOWN;
+    auto             dir  = event->direction;
+    if (event->direction == GDK_SCROLL_SMOOTH) {
+        dir = (event->delta_y <= 0) ? GDK_SCROLL_UP : GDK_SCROLL_DOWN;
     }
-    if((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_UP)) {
+    if ((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_UP)) {
         sess->FontZoomUp();
         return true;
-    } else if((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_DOWN)) {
+    } else if ((event->state & GdkModifierType::GDK_CONTROL_MASK) && (dir == GDK_SCROLL_DOWN)) {
         sess->FontZoomDown();
         return true;
     }
 
     return false;
 }
+gboolean button_press_cb(GtkWidget *self, GdkEventButton *but, gpointer user_data) {
+    TerminalSession *sess = (TerminalSession *)user_data;
+    if (but->state & GDK_SHIFT_MASK && but->button == GDK_BUTTON_SECONDARY) {
+        sess->ShowContextMenu(but);
+        return true;
+    }
+    return false;
+}
 gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
-    //    FUN_INFO("event %c, %s", (char)event->keyval, event->string);
+    FUN_INFO("event %c, %s", (char)event->keyval, event->string);
     if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK) && ((char)event->keyval == 'F')) {
         TerminalSession *sess = (TerminalSession *)user_data;
         sess->ToggleSearch();
@@ -456,14 +463,25 @@ gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
         sess->ToggleMatch();
         return true;
     }
+    if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK)) {
+        if (event->keyval == GDK_KEY_C) {
+            TerminalSession *sess = (TerminalSession *)user_data;
+            vte_terminal_copy_clipboard_format(sess->m_terminal, VteFormat::VTE_FORMAT_TEXT);
+            return true;
+        } else if (event->keyval == GDK_KEY_V) {
+            TerminalSession *sess = (TerminalSession *)user_data;
+            vte_terminal_paste_clipboard(sess->m_terminal);
+            return true;
+        }
+    }
     return false;
 }
 
 void selection_changed(VteTerminal *term, TerminalSession *sess) {
     vte_terminal_copy_primary(term);
-    auto clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-    Glib::ustring text = gtk_clipboard_wait_for_text(clipboard);
-    sess->m_selectionText = text;
+    auto          clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+    Glib::ustring text      = gtk_clipboard_wait_for_text(clipboard);
+    sess->m_selectionText   = text;
     //    if(vte_terminal_get_has_selection(term)) {
     //        vte_terminal_copy_clipboard_format(term, VTE_FORMAT_TEXT);
     //    }
@@ -472,24 +490,25 @@ void selection_changed(VteTerminal *term, TerminalSession *sess) {
 void notification_received(VteTerminal *term, const gchar *summary, const gchar *body) {
     FUN_INFO("summary:%s, body:%s", summary, body);
 }
+
+// void key_press_cb()
 void TerminalSession::InitTerminal() {
-    auto termWidget = vte_terminal_new();
+    auto  termWidget   = vte_terminal_new();
     char *startterm[2] = {0, 0};
-    startterm[0] = vte_get_user_shell();
+    startterm[0]       = vte_get_user_shell();
 
     VteTerminal *term = VTE_TERMINAL(termWidget);
-    vte_terminal_spawn_sync(
-        term,
-        VTE_PTY_DEFAULT,
-        workingDir.empty()? nullptr : workingDir.c_str(),
-        startterm,
-        nullptr,
-        G_SPAWN_SEARCH_PATH,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr);
+    vte_terminal_spawn_sync(term,
+                            VTE_PTY_DEFAULT,
+                            workingDir.empty() ? nullptr : workingDir.c_str(),
+                            startterm,
+                            nullptr,
+                            G_SPAWN_SEARCH_PATH,
+                            nullptr,
+                            nullptr,
+                            nullptr,
+                            nullptr,
+                            nullptr);
     vte_terminal_set_scrollback_lines(term, 10000);
     vte_terminal_set_font_scale(term, 1.0f);
     PangoFontDescription *fontDesc = pango_font_description_new();
@@ -505,6 +524,7 @@ void TerminalSession::InitTerminal() {
     vte_terminal_set_color_foreground(term, backgroundColor);
     m_terminal = term;
     g_signal_connect(m_terminal, "key-press-event", G_CALLBACK(key_press_cb), this);
+    g_signal_connect(m_terminal, "button-press-event", G_CALLBACK(button_press_cb), this);
     g_signal_connect(m_terminal, "scroll-event", G_CALLBACK(scroll_cb), this);
     g_signal_connect(m_terminal, "selection-changed", G_CALLBACK(selection_changed), this);
     g_signal_connect(m_terminal, "notification-received", G_CALLBACK(notification_received), this);
@@ -610,7 +630,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
 
     auto itemCopyPath = std::make_unique<Gtk::MenuItem>(_("Copy Path"), false);
     itemCopyPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
-        auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
+        auto dirPath  = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
         FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
         if (dirPath != nullptr) {
@@ -623,7 +643,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
 
     auto itemOpenPath = std::make_unique<Gtk::MenuItem>(_("Open Path"), false);
     itemOpenPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
-        auto dirPath = vte_terminal_get_current_directory_uri(m_terminal);
+        auto dirPath  = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
         FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
         if (dirPath != nullptr) {
@@ -698,11 +718,11 @@ bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label
     return true;
 }
 void TerminalSession::InitTitleBox() {
-    titleBox = new Gtk::Box();
+    titleBox   = new Gtk::Box();
     auto label = new TitleEntry("Sess-" + std::to_string(m_id));
 
     auto buttonClose = new Gtk::Button();
-    auto buttonMax = new Gtk::Button();
+    auto buttonMax   = new Gtk::Button();
     buttonClose->set_image_from_icon_name("window-close-symbolic", Gtk::ICON_SIZE_BUTTON);
     buttonMax->set_image_from_icon_name("window-maximize-symbolic", Gtk::ICON_SIZE_BUTTON);
     buttonMax->set_relief(Gtk::RELIEF_NONE);
@@ -753,10 +773,9 @@ void TerminalSession::InitTitleBox() {
     titleBox->pack_end(*buttonMax, false, false, 0);
     titleBox->set_halign(Gtk::ALIGN_FILL);
     titleBox->get_style_context()->add_class("title_box");
-    auto color = buttonMax->get_style_context()->get_color();
+    auto color   = buttonMax->get_style_context()->get_color();
     auto bgcolor = buttonMax->get_style_context()->get_background_color();
-    auto color2 = buttonMax->get_style_context()->get_border_color();
-
+    auto color2  = buttonMax->get_style_context()->get_border_color();
 
     FUN_DEBUG("color %s", color.to_string().c_str());
     FUN_DEBUG("bgcolor %s", bgcolor.to_string().c_str());
@@ -839,24 +858,23 @@ void TerminalSession::dualSplit(Gtk::Paned &paned, int w, int h) {
     }
 }
 
-
 void TerminalSession::FontZoomUp() {
-    auto desc = vte_terminal_get_font(m_terminal);
+    auto desc    = vte_terminal_get_font(m_terminal);
     auto newDesc = pango_font_description_copy(desc);
-    auto size = pango_font_description_get_size(desc);
+    auto size    = pango_font_description_get_size(desc);
     FUN_INFO("%d", size);
-    size+=1000;
+    size += 1000;
     pango_font_description_set_size(newDesc, size);
     vte_terminal_set_font(m_terminal, newDesc);
     pango_font_description_free(newDesc);
 }
 void TerminalSession::FontZoomDown() {
     FUN_INFO("");
-    auto desc = vte_terminal_get_font(m_terminal);
+    auto desc    = vte_terminal_get_font(m_terminal);
     auto newDesc = pango_font_description_copy(desc);
-    auto size = pango_font_description_get_size(desc);
-    size-=1000;
-    if(size < 0) {
+    auto size    = pango_font_description_get_size(desc);
+    size -= 1000;
+    if (size < 0) {
         size = 1000;
     }
     pango_font_description_set_size(newDesc, size);

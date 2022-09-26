@@ -29,9 +29,8 @@ class TerminalSession;
 class RootPanedContainer;
 extern TerminalSession *lastFocusTerm;
 class PanedContainer : public Gtk::Paned {
-public:
-
-    PanedContainer * NewPanedContainerAt(int i, Gtk::Orientation ori = Gtk::ORIENTATION_HORIZONTAL);
+  public:
+    PanedContainer *NewPanedContainerAt(int i, Gtk::Orientation ori = Gtk::ORIENTATION_HORIZONTAL);
 
     void setRoot() { root = true; }
     void setId() {
@@ -47,43 +46,39 @@ public:
     void remove(PanedContainer *paned);
 
     // move second  child to the first place :)
-    int Move221();
+    int  Move221();
     void removeFromParent();
 
     static RootPanedContainer *GetRoot(PanedContainer *p);
 
-protected:
+  protected:
     PanedContainer(Gtk::Orientation orient);
-    int m_id = 0;
+    int  m_id = 0;
     bool root = false;
 };
 
 class RootPanedContainer : public PanedContainer {
-public:
-    RootPanedContainer() : PanedContainer(Gtk::ORIENTATION_HORIZONTAL) {
+  public:
+    RootPanedContainer()
+        : PanedContainer(Gtk::ORIENTATION_HORIZONTAL) {
         root = true;
     }
 
-    void AddTerminal(TerminalSession * sess);
-    void RemoveTerminal(TerminalSession * sess);
+    void AddTerminal(TerminalSession *sess);
+    void RemoveTerminal(TerminalSession *sess);
 
     void TerminalNumChanged();
 
     using type_signal_terminal_num_changed = sigc::signal<void(int)>;
-    type_signal_terminal_num_changed signal_terminal_num_changed() {
-        return m_signal_terminal_num_changed;
-    }
-    void Dump();
-    bool HasTerminalSession(TerminalSession * sess) {
-        return m_terminalSessions.count(sess) != 0;
-    }
+    type_signal_terminal_num_changed signal_terminal_num_changed() { return m_signal_terminal_num_changed; }
+    void                             Dump();
+    bool HasTerminalSession(TerminalSession *sess) { return m_terminalSessions.count(sess) != 0; }
 
-protected:
+  protected:
     type_signal_terminal_num_changed m_signal_terminal_num_changed;
 
-protected:
-    std::set<TerminalSession*> m_terminalSessions;
-
+  protected:
+    std::set<TerminalSession *> m_terminalSessions;
 };
 
 #endif // FUNTERM_PANEDCONTAINER_H
