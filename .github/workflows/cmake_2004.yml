@@ -64,7 +64,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: my_appimage
-          path: ${{github.workspace}}/build/*.appimage
+          path: ${{github.workspace}}/build/FunTerm.AppImage
 
 
       
