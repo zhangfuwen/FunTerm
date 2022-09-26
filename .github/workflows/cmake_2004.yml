@@ -66,5 +66,12 @@ jobs:
           name: my_appimage
           path: ${{github.workspace}}/build/FunTerm.AppImage
 
+      - run: |
+          echo "artifactPath=./buil/FunTerm-$(git rev-parse --short master)-x86_64.AppImage" >> $GITHUB_ENV
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifact
+          path: ${{ env.artifactPath }} # this will resolve to testing/file.txt at runtime
+
 
       
