@@ -61,13 +61,13 @@ jobs:
           name: my_deb
           path: ${{github.workspace}}/build/funterm-1.1-Linux.deb
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: my_appimage
-          path: ${{github.workspace}}/build/FunTerm.AppImage
+      #      - uses: actions/upload-artifact@v2
+      #        with:
+      #          name: my_appimage
+      #          path: ${{github.workspace}}/build/FunTerm.AppImage
 
       - run: |
-          echo "artifactPath=./buil/FunTerm-$(git rev-parse --short master)-x86_64.AppImage" >> $GITHUB_ENV
+          echo "artifactPath=${{github.workspace}}/build/FunTerm-$(git rev-parse --short master)-x86_64.AppImage" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
           name: artifact
