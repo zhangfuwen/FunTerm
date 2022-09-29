@@ -54,7 +54,9 @@ sudo apt install gnutls-bin \
  libgnutls* \
  libibus-1.0-dev \
  libgtkmm-3.0-dev \
+ libnautilus-extension-dev \
  g++ \
+ meson \
  libpulse-dev \
  libpsl-dev \
  libbrotli-dev \
