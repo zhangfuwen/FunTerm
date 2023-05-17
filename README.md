@@ -89,4 +89,4 @@ Feel free to send me a pull request, whether it being a refactor(maybe huge, sin
 # 下载
 
 [这里](https://github.com/zhangfuwen/FunTerm/actions) 有Ubuntu 20.04和Ubuntu 22.04的包。但是我没验证过能不能用 :)。欢迎反馈。
-            
+           
