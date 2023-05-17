@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: install meson
-        run: sudo apt install -y python3-pip ; sudo pip3 install meson==0.61.2
+        run: sudo apt -y update; sudo apt install -y python3-pip ; sudo pip3 install meson==0.61.2
 
       - name: prepare
         run: sudo apt install gnutls-bin g++-11 libgnutls30 libsystemd-dev valac gobject-introspection python3-gi libgirepository1.0-dev libvte-dev libgnutls* libibus-1.0-dev libgtkmm-3.0-dev g++ libpulse-dev libpsl-dev libbrotli-dev ninja-build libnautilus-extension-dev

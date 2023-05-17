@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: prepare
-        run: sudo apt install gnutls-bin libgnutls30 libsystemd-dev valac gobject-introspection python3-gi libgirepository1.0-dev libvte-dev libgnutls* libibus-1.0-dev libgtkmm-3.0-dev g++ libpulse-dev libpsl-dev libbrotli-dev meson ninja-build libnautilus-extension-dev; bash prepare_vte.sh
+        run: sudo apt -y update; sudo apt install gnutls-bin libgnutls30 libsystemd-dev valac gobject-introspection python3-gi libgirepository1.0-dev libvte-dev libgnutls* libibus-1.0-dev libgtkmm-3.0-dev g++ libpulse-dev libpsl-dev libbrotli-dev meson ninja-build libnautilus-extension-dev; bash prepare_vte.sh
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
