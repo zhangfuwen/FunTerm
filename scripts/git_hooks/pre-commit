@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+for hook in ./scripts/git_hooks/pre-commit.d/*; do
+    bash $hook
+    RESULT=$?
+    if [ $RESULT != 0 ]; then
+        echo "./scripts/git_hooks/pre-commit.d/$hook returned non-zero: $RESULT, abort commit"
+        echo "you can skip this check using 'git commit --no-verify' at your own risk"
+        echo "本项目的编码规范参考：$(pwd)/doc/code-style.md"
+        exit $RESULT
+    fi
+done
+exit 0
