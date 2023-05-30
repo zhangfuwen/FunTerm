@@ -129,7 +129,8 @@ endif()
 #set(CMAKE_BUILD_WITH_INSTALL_RPATH)
 #set(CMAKE_INSTALL_RPATH "/usr/share/funterm/data/")
 #set(CMAKE_BUILD_RPATH_USE_ORIGIN 1)
-pkg_check_modules(libnautilus-extension REQUIRED libnautilus-extension IMPORTED_TARGET)
+
+pkg_check_modules(libnautilus-extension REQUIRED libnautilus-extension-4 IMPORTED_TARGET)
 add_library(nautilus_funterm SHARED src/nautilus_extension.cpp)
 target_include_directories(nautilus_funterm
         PRIVATE ${GTKMM3_INCLUDE_DIRS}

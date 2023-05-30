@@ -3,12 +3,16 @@
 //
 #define PCRE2_CODE_UNIT_WIDTH 0
 #include "TerminalSession.h"
+#include <glib-object.h>
 #include <pcre2.h>
 #include <vte/vte.h>
+
+#include <utility>
+
 TerminalSession::TerminalSession(Tab *tab, std::string wd)
-    : Gtk::Paned(Gtk::ORIENTATION_VERTICAL) {
-    workingDir    = wd;
-    m_tab         = tab;
+    : Gtk::Paned(Gtk::ORIENTATION_VERTICAL),
+      workingDir(std::move(wd)),
+      m_tab(tab) {
     static int id = 0;
     id++;
     m_id = id;
@@ -21,33 +25,33 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd)
     InitMatchBox();
 
     // setup topbar
-    m_topBar = new Gtk::Box();
-    m_topBar->pack_start(*titleBox);
+    m_topBar = Glib::RefPtr<Gtk::Box>(Gtk::make_managed<Gtk::Box>());
+    m_topBar->pack_start(*titleBox.get());
     m_topBar->get_style_context()->add_class("top_bar");
-    Gtk::Paned::add1(*m_topBar);
+    Gtk::Paned::add1(*m_topBar.get());
     Gtk::Paned::set_position(30);
     set_orientation(Gtk::ORIENTATION_VERTICAL);
     show_all();
 
     // setup content area
-    m_bottomBar = new Gtk::Box();
-    scroll      = new Gtk::VScrollbar();
+    m_bottomBar = Glib::RefPtr<Gtk::Box>(Gtk::make_managed<Gtk::Box>());
+    scroll      = Glib::RefPtr(Gtk::make_managed<Gtk::VScrollbar>());
     m_bottomBar->add(*vte);
-    m_bottomBar->add(*scroll);
-    add2(*m_bottomBar);
+    m_bottomBar->add(*scroll.get());
+    add2(*m_bottomBar.get());
     m_bottomBar->signal_button_press_event().connect([](GdkEventButton *ev) { return true; });
 
     Gtk::Paned::set_focus_on_click(true);
     Gtk::Paned::set_can_focus(true);
     Gtk::Paned::set_visible(true);
     Gtk::Paned::set_child_visible(true);
-    Gtk::Paned::signal_focus_in_event().connect([](bool v) {
+    Gtk::Paned::signal_focus_in_event().connect([](bool) {
         FUN_INFO("panned focus in");
         return true;
     });
-    set_focus_child(*m_bottomBar);
+    set_focus_child(*m_bottomBar.get());
     m_bottomBar->set_focus_child(*vte);
-    signal_size_allocate().connect([this](Gdk::Rectangle &rec) { this->set_position(30); });
+    signal_size_allocate().connect([this](const Gdk::Rectangle &) { this->set_position(30); });
 
     m_pref = std::make_unique<Preference>(
         [this](const Preference &pref, Changes changes) { this->UpdatePreference(pref, changes); });
@@ -63,18 +67,18 @@ TerminalSession::TerminalSession(Tab *tab, std::string wd)
 }
 
 void TerminalSession::InitMatchBox() {
-    m_matchBox      = new Gtk::Box();
-    auto checkMatch = new Gtk::CheckButton();
+    m_matchBox      = Glib::RefPtr<Gtk::Box>(Gtk::make_managed<Gtk::Box>());
+    auto checkMatch = Gtk::make_managed<Gtk::CheckButton>();
     checkMatch->set_tooltip_text(_("toggle highlight matches"));
     checkMatch->signal_toggled().connect([this, checkMatch]() {
         FUN_DEBUG("match toggle %d", checkMatch->get_active());
         m_highlightMatch = checkMatch->get_active();
         RefreshMatch();
     });
-    auto label = new Gtk::Label("Highlight");
+    auto label = Gtk::make_managed<Gtk::Label>("Highlight");
     label->set_margin_left(8);
 
-    auto butConfig = new Gtk::Button();
+    auto butConfig = Gtk::make_managed<Gtk::Button>();
     butConfig->set_image_from_icon_name("emblem-system-symbolic", Gtk::ICON_SIZE_MENU);
     butConfig->set_tooltip_text(_("Manage highlight words"));
     butConfig->signal_clicked().connect([this]() { ShowMatchDialog(); });
@@ -92,9 +96,7 @@ void TerminalSession::RefreshMatch() {
         vte_terminal_match_remove_all(m_terminal);
         vte_terminal_highlight_clear(m_terminal);
         for (auto &m : matchRegexes) {
-            if (m.pattern == nullptr) {
-                m.CompileForMatch();
-            }
+            m.CompileForMatch();
             FUN_DEBUG("add_regex %s, %p", m.text.c_str(), m.pattern);
             vte_terminal_match_add_regex(m_terminal, m.pattern, 0);
             AddHighlight(m);
@@ -106,15 +108,15 @@ void TerminalSession::RefreshMatch() {
 }
 void TerminalSession::AddHighlight(const RegexMatch &m, const HighlightStyle &style) const {
 
-    std::string      s = m.text;
-    HighlightPattern pat;
+    std::string      s   = m.text;
+    HighlightPattern pat = {};
     if (!m.caseSensitive) {
         pat.regex_flags |= PCRE2_CASELESS;
     } else {
         pat.regex_flags = 0;
     }
     if (!m.regex) { // not regex search
-        s = g_regex_escape_string(m.text.c_str(), m.text.size());
+        s = g_regex_escape_string(m.text.c_str(), (gint)m.text.size());
     }
     if (m.wholeWord) {
         using namespace std::string_literals;
@@ -129,9 +131,9 @@ void TerminalSession::AddHighlight(const RegexMatch &m, const HighlightStyle &st
 void TerminalSession::InitSearchBox() {
     searchBox = std::make_unique<SearchBox>();
     searchBox->signal_next_match().connect([this]() {
-        auto status = searchBox->GetStatus();
-        auto text   = status.text;
-        auto regex  = vte_regex_new_for_search(text.c_str(), text.length() + 1, 0, nullptr);
+        auto        status = searchBox->GetStatus();
+        auto const &text   = status.text;
+        auto        regex  = vte_regex_new_for_search(text.c_str(), (gssize)text.length() + 1, 0, nullptr);
         vte_terminal_search_set_regex(m_terminal, regex, 0);
         RegexMatch m(text);
         m.caseSensitive = status.caseSensitive;
@@ -139,10 +141,6 @@ void TerminalSession::InitSearchBox() {
         m.wholeWord     = status.wholeWord;
         AddHighlight(m);
     });
-    //    search->signal_insert_text().connect([](){
-    //      FUN_DEBUG("");
-    //      return true;
-    //    });
     searchBox->signal_search_changed().connect([this]() {
         auto    status = searchBox->GetStatus();
         GError *error  = nullptr;
@@ -153,7 +151,7 @@ void TerminalSession::InitSearchBox() {
             compile_flags |= PCRE2_CASELESS;
         }
         if (!status.regexSearch) { // not regex search
-            text = g_regex_escape_string(text.c_str(), text.size());
+            text = g_regex_escape_string(text.c_str(), (gint)text.size());
         }
         if (status.wholeWord) {
             text = "\\b" + text + "\\b";
@@ -185,19 +183,19 @@ void TerminalSession::InitSearchBox() {
     searchBox->signal_close_clicked().connect([this]() { this->ToggleSearch(); });
 }
 
-void TerminalSession::ToggleMatch(const Glib::ustring &text, bool showOnly) {
-    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] != m_matchBox) {
-        m_topBar->remove(*titleBox);
-        m_topBar->pack_start(*m_matchBox);
+void TerminalSession::ToggleMatch([[maybe_unused]] const Glib::ustring &text, [[maybe_unused]] bool showOnly) {
+    if (!m_topBar->get_children().empty() && m_topBar->get_children()[0] != m_matchBox.get()) {
+        m_topBar->remove(*titleBox.get());
+        m_topBar->pack_start(*m_matchBox.get());
         if (!m_showTitle && get_child1() == nullptr) {
-            pack1(*m_topBar);
+            pack1(*m_topBar.get());
         }
     } else {
         if (!m_showTitle && get_child1() != nullptr) {
-            remove(*m_topBar);
+            remove(*m_topBar.get());
         }
-        m_topBar->remove(*m_matchBox);
-        m_topBar->pack_start(*titleBox);
+        m_topBar->remove(*m_matchBox.get());
+        m_topBar->pack_start(*titleBox.get());
     }
     m_topBar->show_all();
 }
@@ -212,8 +210,7 @@ void TerminalSession::AddHighlight(const Glib::ustring &text) {
 }
 
 void TerminalSession::ToggleSearch(const Glib::ustring &text, bool showOnly) {
-    static Gtk::Widget *save = nullptr;
-    if (m_topBar->get_children().size() > 0 && m_topBar->get_children()[0] != &(Gtk::Box &)*searchBox) {
+    if (!m_topBar->get_children().empty() && m_topBar->get_children()[0] != &(Gtk::Box &)*searchBox) {
         // currently not showing
         m_topBar->remove(*m_topBar->get_children()[0]);
         m_topBar->pack_start((Gtk::Box &)*searchBox);
@@ -221,7 +218,7 @@ void TerminalSession::ToggleSearch(const Glib::ustring &text, bool showOnly) {
             searchBox->SetText(text);
         }
         if (!m_showTitle && get_child1() == nullptr) {
-            pack1(*m_topBar);
+            pack1(*m_topBar.get());
         }
     } else {
         // currently showing
@@ -233,20 +230,20 @@ void TerminalSession::ToggleSearch(const Glib::ustring &text, bool showOnly) {
         } else {
             // hide
             if (!m_showTitle && get_child1() != nullptr) {
-                remove(*m_topBar);
+                remove(*m_topBar.get());
             }
             m_topBar->remove((Gtk::Box &)*searchBox);
-            m_topBar->pack_start(*titleBox);
+            m_topBar->pack_start(*titleBox.get());
         }
     }
     m_topBar->show_all();
 }
 static void grid_set_header(Gtk::Grid *grid) {
-    Gtk::Label *label1 = new Gtk::Label(_("pattern"));
-    Gtk::Label *label2 = new Gtk::Label(_("Case Sensitive"));
-    Gtk::Label *label3 = new Gtk::Label(_("Whole word"));
-    Gtk::Label *label4 = new Gtk::Label(_("Regex"));
-    Gtk::Label *label5 = new Gtk::Label(_("delete"));
+    auto label1 = Gtk::make_managed<Gtk::Label>(_("pattern"));
+    auto label2 = Gtk::make_managed<Gtk::Label>(_("Case Sensitive"));
+    auto label3 = Gtk::make_managed<Gtk::Label>(_("Whole word"));
+    auto label4 = Gtk::make_managed<Gtk::Label>(_("Regex"));
+    auto label5 = Gtk::make_managed<Gtk::Label>(_("delete"));
     grid->attach(*label1, 0, 0);
     grid->attach(*label2, 1, 0);
     grid->attach(*label3, 2, 0);
@@ -256,7 +253,7 @@ static void grid_set_header(Gtk::Grid *grid) {
 }
 
 static void
-grid_add_row(Gtk::Grid *grid, int row_index, std::string key, bool caseSensitive, bool wholeWord, bool regex) {
+grid_add_row(Gtk::Grid *grid, int row_index, std::string const &key, bool caseSensitive, bool wholeWord, bool regex) {
     FUN_INFO("add row %d, %s, %d %d %d", row_index, key.c_str(), caseSensitive, wholeWord, regex);
     auto patternText1 = Gtk::manage(new Gtk::Entry());
     patternText1->set_editable();
@@ -289,7 +286,6 @@ grid_add_row(Gtk::Grid *grid, int row_index, std::string key, bool caseSensitive
 
     auto delete_button = Gtk::manage(new Gtk::Button(_("delete")));
     grid->attach(*delete_button, 4, row_index);
-    const int i = row_index;
     delete_button->set_halign(Gtk::Align::ALIGN_CENTER);
     delete_button->set_valign(Gtk::Align::ALIGN_START);
     delete_button->signal_clicked().connect(
@@ -321,7 +317,7 @@ void RegexMatch::CompileForSearch() {
         compile_flags |= PCRE2_CASELESS;
     }
     if (!regex) { // not regex search
-        text = g_regex_escape_string(text.c_str(), text.size());
+        text = g_regex_escape_string(text.c_str(), (gint)text.size());
     }
     if (wholeWord) {
         text = "\\b" + text + "\\b";
@@ -341,7 +337,7 @@ void RegexMatch::CompileForMatch() {
         compile_flags |= PCRE2_CASELESS;
     }
     if (!regex) { // not regex search
-        pattern_text = g_regex_escape_string(pattern_text.c_str(), pattern_text.size());
+        pattern_text = g_regex_escape_string(pattern_text.c_str(), (gint)pattern_text.size());
     }
     if (wholeWord) {
         pattern_text = "\\b" + pattern_text + "\\b";
@@ -371,14 +367,14 @@ void TerminalSession::ShowMatchDialog() {
     Gtk::Button *but_highlight;
     builder->get_widget<Gtk::Button>("match_dialog_save_button", but_highlight);
 
-    but_new->signal_clicked().connect([=]() {
+    but_new->signal_clicked().connect([grid]() {
         FUN_INFO("button_clicked");
         auto num_rows = grid_get_num_rows(grid);
         FUN_DEBUG("num rows %d", num_rows);
         grid_add_row(grid, num_rows, "", false, false, false);
     });
 
-    but_clear->signal_clicked().connect([=]() {
+    but_clear->signal_clicked().connect([grid]() {
         auto num_rows = grid_get_num_rows(grid);
         for (int i = 1; i < num_rows; i++) {
             // row 0 contains labels that should be kept
@@ -389,7 +385,7 @@ void TerminalSession::ShowMatchDialog() {
         grid_add_row(grid, 1, "", false, false, false);
     });
 
-    but_save->signal_clicked().connect([=]() {
+    but_save->signal_clicked().connect([this, grid]() {
         matchRegexes.clear();
         for (int i = 1; i < 1000; i++) {
             if (grid->get_child_at(0, i) == nullptr) {
@@ -416,21 +412,21 @@ void TerminalSession::ShowMatchDialog() {
     });
 
     grid_set_header(grid);
-    for (auto match : matchRegexes) {
+    for (const auto &match : matchRegexes) {
         auto num_rows = grid_get_num_rows(grid);
         grid_add_row(grid, num_rows, match.text, match.caseSensitive, match.wholeWord, match.regex);
     }
 
-    Gtk::Dialog *matchDialog = new Gtk::Dialog();
+    auto matchDialog = Gtk::make_managed<Gtk::Dialog>();
     matchDialog->get_content_area()->pack_start(*box);
     matchDialog->set_title("Match");
     matchDialog->show_all();
-    matchDialog->signal_response().connect([this](int id) { RefreshMatch(); });
+    matchDialog->signal_response().connect([this]([[maybe_unused]] int id) { RefreshMatch(); });
 }
-gboolean scroll_cb(GtkWidget *self, GdkEventScroll *event, gpointer user_data) {
+gboolean scroll_cb([[maybe_unused]] GtkWidget *self, GdkEventScroll *event, gpointer user_data) {
     FUN_INFO("scroll cb %08X, %08X", event->state, event->type);
-    TerminalSession *sess = (TerminalSession *)user_data;
-    auto             dir  = event->direction;
+    auto sess = (TerminalSession *)user_data;
+    auto dir  = event->direction;
     if (event->direction == GDK_SCROLL_SMOOTH) {
         dir = (event->delta_y <= 0) ? GDK_SCROLL_UP : GDK_SCROLL_DOWN;
     }
@@ -452,14 +448,14 @@ gboolean button_press_cb(GtkWidget *self, GdkEventButton *but, gpointer user_dat
     }
     return false;
 }
-gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data) {
+gboolean key_press_cb([[maybe_unused]] GtkWidget *self, [[maybe_unused]] GdkEventKey *event, gpointer user_data) {
     FUN_INFO("event %c, %s", (char)event->keyval, event->string);
     if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK) && ((char)event->keyval == 'F')) {
-        TerminalSession *sess = (TerminalSession *)user_data;
+        auto sess = (TerminalSession *)user_data;
         sess->ToggleSearch();
         return true;
     } else if ((event->state & GDK_SHIFT_MASK) && (event->state & GDK_CONTROL_MASK) && ((char)event->keyval == 'M')) {
-        TerminalSession *sess = (TerminalSession *)user_data;
+        auto sess = (TerminalSession *)user_data;
         sess->ToggleMatch();
         return true;
     }
@@ -482,26 +478,21 @@ void selection_changed(VteTerminal *term, TerminalSession *sess) {
     auto          clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     Glib::ustring text      = gtk_clipboard_wait_for_text(clipboard);
     sess->m_selectionText   = text;
-    //    if(vte_terminal_get_has_selection(term)) {
-    //        vte_terminal_copy_clipboard_format(term, VTE_FORMAT_TEXT);
-    //    }
 }
 
-void notification_received(VteTerminal *term, const gchar *summary, const gchar *body) {
+void notification_received([[maybe_unused]] VteTerminal *term, const gchar *summary, const gchar *body) {
     FUN_INFO("summary:%s, body:%s", summary, body);
 }
-
-// void key_press_cb()
 void TerminalSession::InitTerminal() {
-    auto  termWidget   = vte_terminal_new();
-    char *startterm[2] = {0, 0};
-    startterm[0]       = vte_get_user_shell();
+    auto                  termWidget = vte_terminal_new();
+    std::array<char *, 2> startterm  = {nullptr, nullptr};
+    startterm[0]                     = vte_get_user_shell();
 
-    VteTerminal *term = VTE_TERMINAL(termWidget);
+    auto term = VTE_TERMINAL(termWidget);
     vte_terminal_spawn_sync(term,
                             VTE_PTY_DEFAULT,
                             workingDir.empty() ? nullptr : workingDir.c_str(),
-                            startterm,
+                            startterm.data(),
                             nullptr,
                             G_SPAWN_SEARCH_PATH,
                             nullptr,
@@ -517,11 +508,11 @@ void TerminalSession::InitTerminal() {
     pango_font_description_set_gravity(fontDesc, PangoGravity::PANGO_GRAVITY_WEST);
     FUN_INFO("vte_terminal set_font %s", pango_font_description_to_string(fontDesc));
     vte_terminal_set_font(term, fontDesc);
-    GdkRGBA *backgroundColor = new GdkRGBA;
-    gdk_rgba_parse(backgroundColor, "#fdfdf6f6e3e3");
-    vte_terminal_set_color_background(term, backgroundColor);
-    gdk_rgba_parse(backgroundColor, "#00002B2B3636");
-    vte_terminal_set_color_foreground(term, backgroundColor);
+    GdkRGBA backgroundColor;
+    gdk_rgba_parse(&backgroundColor, "#fdfdf6f6e3e3");
+    vte_terminal_set_color_background(term, &backgroundColor);
+    gdk_rgba_parse(&backgroundColor, "#00002B2B3636");
+    vte_terminal_set_color_foreground(term, &backgroundColor);
     m_terminal = term;
     g_signal_connect(m_terminal, "key-press-event", G_CALLBACK(key_press_cb), this);
     g_signal_connect(m_terminal, "button-press-event", G_CALLBACK(button_press_cb), this);
@@ -537,12 +528,12 @@ void TerminalSession::InitTerminal() {
     vte = Glib::wrap(termWidget);
     vte->set_can_focus(true);
     vte->set_focus_on_click(true);
-    vte->signal_focus().connect([this](bool v) {
+    vte->signal_focus().connect([this]([[maybe_unused]] bool v) {
         FUN_INFO("lastFocusTerm %p", this);
         lastFocusTerm = this;
         return true;
     });
-    vte->signal_focus_in_event().connect([this](bool v) {
+    vte->signal_focus_in_event().connect([this]([[maybe_unused]] bool v) {
         FUN_INFO("vte focus in");
         FUN_INFO("lastFocusTerm %p", this);
         lastFocusTerm = this;
@@ -563,7 +554,6 @@ void TerminalSession::InitTerminal() {
     });
 
     vte->set_data("self", this);
-    //        vte->set_focus_on_click(true);
 }
 
 void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) {
@@ -591,58 +581,57 @@ void TerminalSession::UpdatePreference(const Preference &pref, Changes changes) 
         vte_terminal_set_font(m_terminal, pref.font_desc);
     }
 }
-void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
+void TerminalSession::ShowContextMenu(GdkEventButton *event) {
     m_popupMenu.Clear();
 
     auto itemCopy = std::make_unique<Gtk::MenuItem>(_("Copy"), true);
-    //            itemCopy->set_related_action(Gtk::Action::create("copy", "copy", "copy"));
-    itemCopy->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemCopy->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         CopyText();
         return true;
     });
     auto itemPaste = std::make_unique<Gtk::MenuItem>(_("Paste"), true);
-    itemPaste->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemPaste->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         PasteText();
         return true;
     });
 
     auto itemSearch = std::make_unique<Gtk::MenuItem>(_("Search"), false);
-    itemSearch->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemSearch->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         ToggleSearch();
         return true;
     });
     auto itemHighlight = std::make_unique<Gtk::MenuItem>(_("Highlight Management"), false);
-    itemHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemHighlight->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         ToggleMatch();
         return true;
     });
 
     auto itemSearchSelected = std::make_unique<Gtk::MenuItem>(_("Search Selected"), false);
-    itemSearchSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemSearchSelected->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         ToggleSearch(m_selectionText, true);
         return true;
     });
     auto itemHighlightSelected = std::make_unique<Gtk::MenuItem>(_("Highlight Selected"), false);
-    itemHighlightSelected->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemHighlightSelected->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         AddHighlight(m_selectionText);
         return true;
     });
 
     auto itemCopyPath = std::make_unique<Gtk::MenuItem>(_("Copy Path"), false);
-    itemCopyPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemCopyPath->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         auto dirPath  = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
         FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
         if (dirPath != nullptr) {
             auto clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-            gtk_clipboard_set_text(clipboard, dirPath, strlen(dirPath));
+            gtk_clipboard_set_text(clipboard, dirPath, (gint)strlen(dirPath));
         }
 
         return true;
     });
 
     auto itemOpenPath = std::make_unique<Gtk::MenuItem>(_("Open Path"), false);
-    itemOpenPath->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemOpenPath->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         auto dirPath  = vte_terminal_get_current_directory_uri(m_terminal);
         auto filePath = vte_terminal_get_current_file_uri(m_terminal);
         FUN_INFO("dirPath %s, filePath:%s", dirPath, filePath);
@@ -653,25 +642,23 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
     });
 
     auto itemPreference = std::make_unique<Gtk::MenuItem>(_("Preference"), true);
-    itemPreference->signal_button_press_event().connect([this](GdkEventButton *ev) {
+    itemPreference->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
         if (m_pref != nullptr) {
             m_pref->PreferenceFromDialog();
         }
         return true;
     });
-    if (vte_terminal_get_has_selection(m_terminal)) {
-        if (m_highlightedTexts.count(m_selectionText)) {
-            auto itemRemoveHighlight = std::make_unique<Gtk::MenuItem>(_("Remove Highlight"), true);
-            itemRemoveHighlight->signal_button_press_event().connect([this](GdkEventButton *ev) {
-                m_highlightedTexts.erase(m_selectionText);
-                vte_terminal_highlight_clear(m_terminal);
-                for (auto text : m_highlightedTexts) {
-                    AddHighlight(text);
-                }
-                return true;
-            });
-            m_popupMenu.Add(std::move(itemRemoveHighlight));
-        }
+    if (vte_terminal_get_has_selection(m_terminal) && m_highlightedTexts.count(m_selectionText)) {
+        auto itemRemoveHighlight = std::make_unique<Gtk::MenuItem>(_("Remove Highlight"), true);
+        itemRemoveHighlight->signal_button_press_event().connect([this]([[maybe_unused]] GdkEventButton const *ev) {
+            m_highlightedTexts.erase(m_selectionText);
+            vte_terminal_highlight_clear(m_terminal);
+            for (const auto &text : m_highlightedTexts) {
+                AddHighlight(text);
+            }
+            return true;
+        });
+        m_popupMenu.Add(std::move(itemRemoveHighlight));
     }
 
     m_popupMenu.Add(std::move(itemCopy));
@@ -689,7 +676,7 @@ void TerminalSession::ShowContextMenu(const GdkEventButton *ev) {
     m_popupMenu.Add(std::move(itemSearch));
     m_popupMenu.Add(std::move(itemHighlight));
     m_popupMenu.Add(std::move(itemPreference));
-    m_popupMenu.Show((GdkEvent *)ev);
+    m_popupMenu.Show((GdkEvent *)event);
 }
 
 void TerminalSession::CopyText() {
@@ -708,7 +695,7 @@ void TerminalSession::PasteText() {
     vte_terminal_paste_clipboard(m_terminal);
 }
 
-bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label) {
+bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label) const {
     if (ev->type == GDK_2BUTTON_PRESS) {
         FUN_INFO("double click");
         label->set_can_focus(true);
@@ -718,11 +705,11 @@ bool TerminalSession::OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label
     return true;
 }
 void TerminalSession::InitTitleBox() {
-    titleBox   = new Gtk::Box();
-    auto label = new TitleEntry("Sess-" + std::to_string(m_id));
+    titleBox   = Glib::RefPtr<Gtk::Box>(Gtk::make_managed<Gtk::Box>());
+    auto label = Gtk::make_managed<TitleEntry>("Sess-" + std::to_string(m_id));
 
-    auto buttonClose = new Gtk::Button();
-    auto buttonMax   = new Gtk::Button();
+    auto buttonClose = Gtk::make_managed<Gtk::Button>();
+    auto buttonMax   = Gtk::make_managed<Gtk::Button>();
     buttonClose->set_image_from_icon_name("window-close-symbolic", Gtk::ICON_SIZE_BUTTON);
     buttonMax->set_image_from_icon_name("window-maximize-symbolic", Gtk::ICON_SIZE_BUTTON);
     buttonMax->set_relief(Gtk::RELIEF_NONE);
@@ -772,26 +759,24 @@ void TerminalSession::InitTitleBox() {
     titleBox->pack_end(*buttonClose, false, false, 0);
     titleBox->pack_end(*buttonMax, false, false, 0);
     titleBox->set_halign(Gtk::ALIGN_FILL);
-    titleBox->get_style_context()->add_class("title_box");
+//    titleBox->get_style_context()->add_class("title_box");
     auto color   = buttonMax->get_style_context()->get_color();
     auto bgcolor = buttonMax->get_style_context()->get_background_color();
     auto color2  = buttonMax->get_style_context()->get_border_color();
 
     FUN_DEBUG("color %s", color.to_string().c_str());
     FUN_DEBUG("bgcolor %s", bgcolor.to_string().c_str());
-    for (auto clazz : buttonMax->get_style_context()->list_classes()) {
+    for (const auto &clazz : buttonMax->get_style_context()->list_classes()) {
         FUN_DEBUG("%s ", clazz.c_str());
     }
-    titleBox->override_background_color(color2);
-    buttonMax->override_background_color(bgcolor);
     titleBox->set_halign(Gtk::ALIGN_FILL);
 }
 void TerminalSession::HideTitle() {
-    remove(*m_topBar);
+    remove(*m_topBar.get());
     m_showTitle = false;
 }
 void TerminalSession::ShowTitle() {
-    pack1(*m_topBar);
+    pack1(*m_topBar.get());
     m_showTitle = true;
 }
 void TerminalSession::Split(TerminalSession *new_sess, Gtk::Orientation orient) {

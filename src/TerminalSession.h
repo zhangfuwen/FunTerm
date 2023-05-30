@@ -28,6 +28,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 class TerminalSession;
 extern TerminalSession *lastFocusTerm;
@@ -80,16 +81,18 @@ inline HighlightStyle getRandomStyle() {
 gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data);
 
 struct RegexMatch {
-    RegexMatch(std::string t)
-        : text(t) {}
+    explicit RegexMatch(std::string t)
+        : text(std::move(t)) {}
+
     ~RegexMatch() {
         if (pattern) {
             vte_regex_unref(pattern);
         }
     }
+
     void        CompileForMatch();
     void        CompileForSearch();
-    std::string text          = "";
+    std::string text;
     bool        caseSensitive = false;
     bool        regex         = false;
     bool        wholeWord     = false;
@@ -119,14 +122,14 @@ class SearchBox : private Gtk::Box {
   public:
     struct SearchStatus {
         Glib::ustring text;
-        bool          caseSensitive;
-        bool          wholeWord;
-        bool          regexSearch;
+        bool          caseSensitive{};
+        bool          wholeWord{};
+        bool          regexSearch{};
     };
 
     operator Gtk::Box &() { return *this; }
 
-    SearchStatus GetStatus() {
+    SearchStatus GetStatus() const {
         SearchStatus status;
         status.wholeWord     = wholeWord.get_active();
         status.regexSearch   = regexSearch.get_active();
@@ -203,7 +206,7 @@ class TerminalSession : public Gtk::Paned {
     void Split(TerminalSession *new_sess, Gtk::Orientation orient = Gtk::ORIENTATION_HORIZONTAL);
     void ToggleSearch(const Glib::ustring &text = "", bool showOnly = false);
     void ToggleMatch(const Glib::ustring &text = "", bool showOnly = false);
-    bool OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label);
+    bool OnTitleDoubleClicked(GdkEventButton *ev, TitleEntry *label) const;
     void HideTitle();
     void ShowTitle();
     void CopyText();
@@ -212,31 +215,31 @@ class TerminalSession : public Gtk::Paned {
     void FontZoomUp();
     void FontZoomDown();
 
-    ~TerminalSession() override {}
+    ~TerminalSession() override = default;
 
   private:
-    int         m_id       = 0;
-    std::string workingDir = "";
+    int         m_id = 0;
+    std::string workingDir;
 
     // root tab
     Tab *m_tab = nullptr;
 
     // topbar
     bool                       m_showTitle      = true;
-    Gtk::Box                  *m_topBar         = nullptr; // place holder
-    Gtk::Box                  *titleBox         = nullptr;
+    Glib::RefPtr<Gtk::Box>     m_topBar         = {}; // place holder
+    Glib::RefPtr<Gtk::Box>     titleBox         = {};
     std::unique_ptr<SearchBox> searchBox        = nullptr;
-    Gtk::Box                  *m_topBarOldBox   = nullptr;
-    Gtk::Box                  *m_matchBox       = nullptr;
+    Glib::RefPtr<Gtk::Box>     m_topBarOldBox   = {};
+    Glib::RefPtr<Gtk::Box>     m_matchBox       = {};
     bool                       m_highlightMatch = true;
     VteRegex                  *searchRegex      = nullptr;
     std::vector<RegexMatch>    matchRegexes;
 
     // bottombar
-    Gtk::Box        *m_bottomBar = nullptr;
-    Gtk::Widget     *vte         = nullptr;
-    VteTerminal     *m_terminal  = nullptr;
-    Gtk::VScrollbar *scroll      = nullptr;
+    Glib::RefPtr<Gtk::Box>        m_bottomBar = {};
+    Gtk::Widget                  *vte         = nullptr;
+    VteTerminal                  *m_terminal  = nullptr;
+    Glib::RefPtr<Gtk::VScrollbar> scroll      = {};
 
     friend gboolean key_press_cb(GtkWidget *self, GdkEventKey *event, gpointer user_data);
     friend void     selection_changed(VteTerminal *term, TerminalSession *sess);
@@ -255,7 +258,7 @@ class TerminalSession : public Gtk::Paned {
     const std::string prefFile  = "pref.txt";
 
   public:
-    void ShowContextMenu(const GdkEventButton *ev);
+    void ShowContextMenu(GdkEventButton *ev);
 };
 
 #endif // FUNTERM_TERMINALSESSION_H

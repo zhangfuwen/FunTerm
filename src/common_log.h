@@ -125,12 +125,12 @@ static_assert(trim_filename("file.cpp") == "file.cpp");
                ##__VA_ARGS__);                                                                                         \
     } while (0)
 
-#ifdef NDEBUG
-#undef FUN_TRACE
-#undef FUN_DEBUG
-#define FUN_DEBUG(fmt, ...)
-#define FUN_TRACE(fmt, ...)
-#endif
+//#ifdef NDEBUG
+//#undef FUN_TRACE
+//#undef FUN_DEBUG
+//#define FUN_DEBUG(fmt, ...)
+//#define FUN_TRACE(fmt, ...)
+//#endif
 
 static inline void printBacktrace() {
     char   buff[40];
