@@ -123,6 +123,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(funterm PRIVATE RES_FILE_DIR="${CMAKE_SOURCE_DIR}/res")
 else()
 	target_compile_definitions(funterm PRIVATE RES_FILE_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/funterm/data/")
+    message("CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}")
 endif()
 #target_compile_options(funterm PRIVATE  -Wl,--no-enable-new-dtags -Wl,-rpath,${CMAKE_SOURCE_DIR}/thirdparty/install/lib/x86_64-linux-gnu/)
 
@@ -146,6 +147,19 @@ set(CPACK_PACKAGE_NAME "funterm") # debian package name
 set(CPACK_PACKAGE_VERSION "1.1")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA, "scripts/prerm;scripts/postrm;scripts/preinst;scripts/postinst")
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libvte")
+
+message("CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATADIR}")
+message("CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}")
+message("-- Current compiler flags CMAKE_CXX_FLAGS are: ${CMAKE_CXX_FLAGS}")
+message("-- Current compiler flags CMAKE_C_FLAGS are: ${CMAKE_C_FLAGS}")
+
+get_target_property(TARGET_COMPILE_OPTIONS funterm COMPILE_OPTIONS)
+message("Compile options for target 'funterm': ${TARGET_COMPILE_OPTIONS}")
+message("Compile options for target 'funterm': $<TARGET_PROPERTY:funterm,COMPILE_OPTIONS>")
+
+get_target_property(TARGET_COMPILE_DEFINITIONS funterm COMPILE_DEFINITIONS)
+message("Compile definitions for target 'funterm': ${TARGET_COMPILE_DEFINITIONS}")
+message("Compile definitions for target 'funterm': $<TARGET_PROPERTY:funterm,COMPILE_DEFINITIONS>")
 
 INSTALL(FILES ${CMAKE_BINARY_DIR}/res/funterm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/thirdparty/install/etc/profile.d/vte.sh DESTINATION /etc/profile.d/vte-funterm.sh PERMISSIONS OWNER_READ OWNER_WRITE WORLD_READ WORLD_EXECUTE)

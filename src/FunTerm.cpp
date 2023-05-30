@@ -99,6 +99,9 @@ static int SplitTerm(Gtk::Orientation ori) {
     lastFocusTerm->Split(new TerminalSession(tab), ori);
     return 0;
 }
+#define STR_VALUE(x) #x
+#define STRING_VALUE(x) STR_VALUE(x)
+#pragma message("RES_FILE_DIR is " STRING_VALUE(RES_FILE_DIR))
 
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, signal_handler);
@@ -115,6 +118,12 @@ int main(int argc, char *argv[]) {
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "tab", 't', "file system uri");
 
     std::cout << RES_FILE_DIR << std::endl;
+    for(const auto & dataDir : Glib::get_system_data_dirs()) {
+            FUN_INFO("system dataDir: %s", dataDir.c_str());
+    }
+    FUN_INFO("user dataDir: %s", Glib::get_user_data_dir().c_str());
+    FUN_INFO("application name: %s", Glib::get_application_name().c_str());
+    FUN_INFO("user runtime dir: %s", Glib::get_user_runtime_dir().c_str());
     if (!std::filesystem::is_regular_file(RES_FILE_DIR "/funterm.glade")) {
         FUN_ERROR("file does not exist: %s", RES_FILE_DIR "/funterm.glade");
         return -1;
