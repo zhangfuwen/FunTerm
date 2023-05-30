@@ -42,7 +42,7 @@ static inline std::map<std::string, std::string> load_fast_input_config(const st
     std::string file_path;
     if (filename.empty()) {
         auto user_dir = get_ibus_fun_user_data_dir();
-        file_path     = user_dir + "fast_input.json";
+        file_path = user_dir + "fast_input.json";
     } else {
         file_path = filename;
     }
@@ -52,7 +52,7 @@ static inline std::map<std::string, std::string> load_fast_input_config(const st
     }
 
     FUN_INFO("loading file %s", file_path.c_str());
-    std::ifstream  ifs(file_path);
+    std::ifstream ifs(file_path);
     configor::json j;
     try {
         ifs >> j;
@@ -69,8 +69,8 @@ static inline std::map<std::string, std::string> load_fast_input_config(const st
 }
 
 static inline std::string exec(const char *cmd) {
-    std::array<char, 128>                    buffer;
-    std::string                              result;
+    std::array<char, 128> buffer;
+    std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed!");

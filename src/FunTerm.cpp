@@ -26,8 +26,8 @@
 #include <string>
 
 Glib::RefPtr<Gtk::Application> app;
-Glib::RefPtr<Gtk::Builder>     builder;
-Gtk::ApplicationWindow        *win;
+Glib::RefPtr<Gtk::Builder> builder;
+Gtk::ApplicationWindow *win;
 
 void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
     if (filepath.empty()) {
@@ -50,8 +50,8 @@ void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
             FUN_ERROR("child \"%d\" does not exist", i);
             break;
         }
-        auto keyEntry  = (Gtk::Entry *)grid->get_child_at(0, i);
-        auto cmdEntry  = (Gtk::Entry *)grid->get_child_at(1, i);
+        auto keyEntry = (Gtk::Entry *) grid->get_child_at(0, i);
+        auto cmdEntry = (Gtk::Entry *) grid->get_child_at(1, i);
         auto keyString = keyEntry ? keyEntry->get_text() : "";
         auto cmdString = cmdEntry ? cmdEntry->get_text() : "";
         if (keyString.empty() || cmdString.empty()) {
@@ -83,13 +83,13 @@ void save_fast_input_config(Gtk::Grid *grid, std::string filepath = "") {
 }
 
 TerminalSession *lastFocusTerm = nullptr;
-Gtk::Notebook   *notebook;
+Gtk::Notebook *notebook;
 
 static int SplitTerm(Gtk::Orientation ori) {
     if (notebook == nullptr) {
         return -1;
     }
-    Tab *tab = (Tab *)notebook->get_nth_page(notebook->get_current_page());
+    Tab *tab = (Tab *) notebook->get_nth_page(notebook->get_current_page());
     if (tab == nullptr) {
         return -1;
     }
@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
     app->add_main_option_entry(Gio::Application::OPTION_TYPE_STRING, "tab", 't', "file system uri");
 
     std::cout << RES_FILE_DIR << std::endl;
-    for(const auto & dataDir : Glib::get_system_data_dirs()) {
-            FUN_INFO("system dataDir: %s", dataDir.c_str());
+    for (const auto &dataDir : Glib::get_system_data_dirs()) {
+        FUN_INFO("system dataDir: %s", dataDir.c_str());
     }
     FUN_INFO("user dataDir: %s", Glib::get_user_data_dir().c_str());
     FUN_INFO("application name: %s", Glib::get_application_name().c_str());
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 
     // headerbar
     Gtk::HeaderBar *headerbar;
-    auto            builder2 = Gtk::Builder::create_from_file(RES_FILE_DIR "/headerbar.glade");
+    auto builder2 = Gtk::Builder::create_from_file(RES_FILE_DIR "/headerbar.glade");
     builder2->get_widget<Gtk::HeaderBar>("headerbar", headerbar);
     Gtk::Button *but_new_tab;
     builder2->get_widget<Gtk::Button>("but_new_tab", but_new_tab);
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
     });
 
     auto new_tab = [](Gtk::Notebook *notebook, std::string wd = "") {
-        static int tabId  = notebook->get_n_pages();
-        auto      *panned = new RootPanedContainer();
-        auto       tab    = new Tab(panned, "Tab-" + std::to_string(tabId));
+        static int tabId = notebook->get_n_pages();
+        auto *panned = new RootPanedContainer();
+        auto tab = new Tab(panned, "Tab-" + std::to_string(tabId));
         panned->setId();
         panned->setRoot();
         auto termSess = new TerminalSession(tab, wd);
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
             // Parse command-line arguments that were passed either to the primary (first) instance
             // or to subsequent instances.
             // Note that this parsing is happening in the primary (not local) instance.
-            bool          foo_value = false;
+            bool foo_value = false;
             Glib::ustring uri;
             if (auto ret = options->lookup_value("tab", uri); ret) {
                 FUN_INFO("uri %s", uri.substr(7).c_str());
@@ -224,12 +224,12 @@ int main(int argc, char *argv[]) {
     win->set_title("Fun Terminal");
 
     GtkCssProvider *provider;
-    GdkDisplay     *display;
-    GdkScreen      *screen;
+    GdkDisplay *display;
+    GdkScreen *screen;
 
     provider = gtk_css_provider_new();
-    display  = gdk_display_get_default();
-    screen   = gdk_display_get_default_screen(display);
+    display = gdk_display_get_default();
+    screen = gdk_display_get_default_screen(display);
     gtk_style_context_add_provider_for_screen(
         screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 

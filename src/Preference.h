@@ -14,13 +14,13 @@
 
 struct ColorScheme {
     GdkRGBA bg, fg, cursor;
-    bool    hasBg = false, hasFg = false, hasCursor = false;
+    bool hasBg = false, hasFg = false, hasCursor = false;
     GdkRGBA palette[16];
-    int     numColor = 0;
+    int numColor = 0;
 };
 
 inline std::optional<ColorScheme> Parse(std::string filePath) {
-    ColorScheme                                  cs;
+    ColorScheme cs;
     std::unordered_map<std::string, std::string> m;
     FUN_DEBUG("filepath %s", filePath.c_str());
     handycpp::file::for_each_line(filePath, [&m](int n, std::string line) {
@@ -81,35 +81,35 @@ inline std::optional<ColorScheme> Parse(std::string filePath) {
 }
 
 struct Changes {
-    bool cs_changed   = false;
+    bool cs_changed = false;
     bool font_changed = false;
 };
 
 class PreferenceDialog : public Gtk::Dialog {
-  public:
+public:
     Changes m_changes;
 };
 
 class Preference {
-  public:
+public:
     Preference(std::function<void(const Preference &, Changes changes)> onChanged) {
         this->onChanged = std::move(onChanged);
     }
-    void                       PreferenceFromDialog();
+    void PreferenceFromDialog();
     std::optional<ColorScheme> GetColorscheme() const { return m_currentColorScheme; }
-    std::string                ToString();
-    void                       FromString(std::string fileContext);
+    std::string ToString();
+    void FromString(std::string fileContext);
 
-    std::optional<ColorScheme>                       m_currentColorScheme{};
-    PangoFontDescription                            *font_desc = nullptr;
-    int                                              font_size;
+    std::optional<ColorScheme> m_currentColorScheme{};
+    PangoFontDescription *font_desc = nullptr;
+    int font_size;
     std::function<void(const Preference &, Changes)> onChanged;
 
     const std::string colorSchemeDir = RES_FILE_DIR "/colorschemes/";
-    const std::string configDir      = Glib::get_user_config_dir() + "/funterm/";
-    const std::string prefFile       = "pref.txt";
+    const std::string configDir = Glib::get_user_config_dir() + "/funterm/";
+    const std::string prefFile = "pref.txt";
 
-    int  m_scrollLines = 0;
+    int m_scrollLines = 0;
     void SavePrefs();
 };
 

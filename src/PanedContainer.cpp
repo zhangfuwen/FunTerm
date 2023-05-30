@@ -91,15 +91,15 @@ void PanedContainer::add2(PanedContainer *paned) { Gtk::Paned::add2(*paned); }
 void PanedContainer::remove(PanedContainer *paned) { Gtk::Paned::remove(*paned); }
 
 void PanedContainer::add1(TerminalSession *sess) {
-    Gtk::Paned::add1((Gtk::Widget &)*sess);
+    Gtk::Paned::add1((Gtk::Widget &) *sess);
     GetRoot(this)->AddTerminal(sess);
 }
 void PanedContainer::add2(TerminalSession *sess) {
-    Gtk::Paned::add2((Gtk::Widget &)*sess);
+    Gtk::Paned::add2((Gtk::Widget &) *sess);
     GetRoot(this)->AddTerminal(sess);
 }
 void PanedContainer::remove(TerminalSession *sess) {
-    Gtk::Paned::remove((Gtk::Widget &)*sess);
+    Gtk::Paned::remove((Gtk::Widget &) *sess);
     GetRoot(this)->RemoveTerminal(sess);
 }
 
@@ -131,17 +131,17 @@ void RootPanedContainer::Dump() {
     std::queue<void *> q;
     q.emplace(this);
     while (!q.empty()) {
-        int siz = (int)q.size();
+        int siz = (int) q.size();
         for (int i = 0; i < siz; i++) {
             auto x = q.front();
             q.pop();
-            if (m_terminalSessions.count((TerminalSession *)x)) {
-                printf("%p(term)->%p ", x, ((TerminalSession *)x)->get_parent());
+            if (m_terminalSessions.count((TerminalSession *) x)) {
+                printf("%p(term)->%p ", x, ((TerminalSession *) x)->get_parent());
             } else {
                 printf("%p ", x);
             }
-            if (x != nullptr && !m_terminalSessions.count((TerminalSession *)x)) {
-                auto paned = (PanedContainer *)x;
+            if (x != nullptr && !m_terminalSessions.count((TerminalSession *) x)) {
+                auto paned = (PanedContainer *) x;
                 q.push(paned->get_child1());
                 q.push(paned->get_child2());
             }

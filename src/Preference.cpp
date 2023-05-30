@@ -8,8 +8,8 @@
 void Preference::PreferenceFromDialog() {
     Glib::setenv("GSETTINGS_SCHEMA_DIR", "res", true);
 
-    auto settings                 = Gio::Settings::create("fun.xjbcode.funterm", "/fun/xjbcode/funterm/");
-    m_scrollLines                 = settings->get_int("scroll-lines");
+    auto settings = Gio::Settings::create("fun.xjbcode.funterm", "/fun/xjbcode/funterm/");
+    m_scrollLines = settings->get_int("scroll-lines");
     PreferenceDialog *matchDialog = new PreferenceDialog();
 
     auto builder = Gtk::Builder::create_from_file(RES_FILE_DIR "/preference_dialog.glade");
@@ -55,7 +55,7 @@ void Preference::PreferenceFromDialog() {
     matchDialog->signal_response().connect([this, matchDialog, cs_combo](int id) {
         FUN_DEBUG("dialog close %d", matchDialog->m_changes.cs_changed);
         if (matchDialog->m_changes.cs_changed) {
-            auto fileName        = cs_combo->get_active_text();
+            auto fileName = cs_combo->get_active_text();
             m_currentColorScheme = Parse(fileName);
         }
         onChanged(*this, matchDialog->m_changes);

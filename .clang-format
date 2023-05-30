@@ -1,13 +1,34 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 ColumnLimit: 120
-
+PointerAlignment: Right
+MaxEmptyLinesToKeep: 1
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+AlignTrailingComments: true
+# SpacesInSquareBrackets: true
+# SpacesInParentheses: true
+SpaceBeforeAssignmentOperators: true
+SpacesInContainerLiterals: true
+IndentWrappedFunctionNames: true
+KeepEmptyLinesAtTheStartOfBlocks: true
+BreakConstructorInitializersBeforeComma: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+#PackConstructorInitializers: Never
+SpaceAfterCStyleCast: true
+TabWidth: 4
+UseTab: Never
+# private, public
+AccessModifierOffset: -4
 BinPackArguments: false
 BinPackParameters: false
 AlignAfterOpenBracket: Align
-IndentCaseLabels: true
-AllowAllParametersOfDeclarationOnNextLine: false
-AlignConsecutiveDeclarations: Consecutive
-AlignConsecutiveAssignments: Consecutive
-AllowAllArgumentsOnNextLine: true
-PackConstructorInitializers: Never
+IndentCaseLabels: false
+# ####### disable alignment in this case
+# int                abcdefg = 1;
+# shared_ptr<MyType> b       = std::make_shared<>...
+# AlignConsecutiveDeclarations: true
+# AlignConsecutiveAssignments: true
+# AlignConsecutiveDeclarations: Consecutive
+# AlignConsecutiveAssignments: Consecutive

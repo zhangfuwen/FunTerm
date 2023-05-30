@@ -32,11 +32,11 @@ static void do_file_item_cb(NautilusMenuItem *item, gpointer user_data) {
     GList *files;
     GList *l;
 
-    files = (GList *)g_object_get_data((GObject *)item, DATA_KEY);
+    files = (GList *) g_object_get_data((GObject *) item, DATA_KEY);
 
     NautilusFileInfo *file = NAUTILUS_FILE_INFO(l->data);
-    auto              name = nautilus_file_info_get_name(file);
-    auto              uri  = nautilus_file_info_get_uri(file);
+    auto name = nautilus_file_info_get_name(file);
+    auto uri = nautilus_file_info_get_uri(file);
     g_print("doing stuff with %s\n", name);
     using namespace std::string_literals;
     system((BIN_DIR "/funterm "s + uri).c_str());
@@ -46,7 +46,7 @@ static void do_file_item_cb(NautilusMenuItem *item, gpointer user_data) {
 }
 
 static void do_background_item_cb(NautilusMenuItem *item, gpointer user_data) {
-    char *uri = (char *)g_object_get_data(reinterpret_cast<GObject *>(item), DATA_KEY);
+    char *uri = (char *) g_object_get_data(reinterpret_cast<GObject *>(item), DATA_KEY);
     using namespace std::string_literals;
     g_print("-doing stuff with %s\n", uri);
     // system(("/usr/bin/funterm "s + uri + " &").c_str());
@@ -56,13 +56,13 @@ static void do_background_item_cb(NautilusMenuItem *item, gpointer user_data) {
 
 GList *get_background_items(NautilusMenuProvider *menuProvider, GtkWidget *widget, NautilusFileInfo *info) {
     NautilusMenuItem *item;
-    GList            *ret = g_list_alloc();
-    item                  = nautilus_menu_item_new(
+    GList *ret = g_list_alloc();
+    item = nautilus_menu_item_new(
         "FuntermExtension::open_dir", "Open with Funterm", "Open directory with funterm", NULL /* icon name */);
     g_signal_connect(item, "activate", G_CALLBACK(do_background_item_cb), menuProvider);
     auto uri = nautilus_file_info_get_uri(info);
     g_print("doing stuff with %s\n", uri);
-    g_object_set_data_full((GObject *)item, DATA_KEY, uri, nullptr);
+    g_object_set_data_full((GObject *) item, DATA_KEY, uri, nullptr);
     ret = g_list_append(NULL, item);
 
     return ret;
@@ -85,12 +85,12 @@ GList *get_file_items(NautilusMenuProvider *menuProvider, GtkWidget *widget, GLi
 
     // add menu items
     NautilusMenuItem *item;
-    GList            *ret = g_list_alloc();
-    item                  = nautilus_menu_item_new(
+    GList *ret = g_list_alloc();
+    item = nautilus_menu_item_new(
         "FuntermExtension::open_dir", "Open with Funterm", "Open directory with funterm", NULL /* icon name */);
     g_signal_connect(item, "activate", G_CALLBACK(do_file_item_cb), menuProvider);
     g_object_set_data_full(
-        (GObject *)item, DATA_KEY, nautilus_file_info_list_copy(files), (GDestroyNotify)nautilus_file_info_list_free);
+        (GObject *) item, DATA_KEY, nautilus_file_info_list_copy(files), (GDestroyNotify) nautilus_file_info_list_free);
     ret = g_list_append(NULL, item);
 
     return ret;
@@ -98,7 +98,7 @@ GList *get_file_items(NautilusMenuProvider *menuProvider, GtkWidget *widget, GLi
 
 static void menu_provider_iface_init(NautilusMenuProviderIface *iface) {
     iface->get_background_items = get_background_items;
-    iface->get_file_items       = get_file_items;
+    iface->get_file_items = get_file_items;
     //    iface->get_file_items = nullptr;
 }
 
@@ -111,7 +111,7 @@ static void nautilus_funterm_menu_provider_class_finalize(NautilusFuntermMenuPro
 
 static void nautilus_funterm_menu_provider_class_init(NautilusFuntermMenuProviderClass *klass) {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->finalize     = nautilus_funterm_menu_provider_finalize;
+    object_class->finalize = nautilus_funterm_menu_provider_finalize;
 }
 
 static GType type_list[1];
@@ -126,7 +126,7 @@ void nautilus_module_initialize(GTypeModule *module) {
 }
 void nautilus_module_shutdown(void) {}
 void nautilus_module_list_types(const GType **types, int *num_types) {
-    *types     = type_list;
+    *types = type_list;
     *num_types = G_N_ELEMENTS(type_list);
 }
 }

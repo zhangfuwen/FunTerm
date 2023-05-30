@@ -125,22 +125,22 @@ static_assert(trim_filename("file.cpp") == "file.cpp");
                ##__VA_ARGS__);                                                                                         \
     } while (0)
 
-//#ifdef NDEBUG
-//#undef FUN_TRACE
-//#undef FUN_DEBUG
-//#define FUN_DEBUG(fmt, ...)
-//#define FUN_TRACE(fmt, ...)
-//#endif
+// #ifdef NDEBUG
+// #undef FUN_TRACE
+// #undef FUN_DEBUG
+// #define FUN_DEBUG(fmt, ...)
+// #define FUN_TRACE(fmt, ...)
+// #endif
 
 static inline void printBacktrace() {
-    char   buff[40];
+    char buff[40];
     time_t now = time(nullptr);
     strftime(buff, 40, "%Y-%m-%d %H:%M:%S", localtime(&now));
 
     FUN_ERROR("crash: %s\n", buff);
-    void  *stackBuffer[64];
-    int    numAddresses = backtrace((void **)&stackBuffer, 64);
-    char **addresses    = backtrace_symbols(stackBuffer, numAddresses);
+    void *stackBuffer[64];
+    int numAddresses = backtrace((void **) &stackBuffer, 64);
+    char **addresses = backtrace_symbols(stackBuffer, numAddresses);
     for (int i = 0; i < numAddresses; ++i) {
         FUN_ERROR("[%2d]: %s\n", i, addresses[i]);
     }

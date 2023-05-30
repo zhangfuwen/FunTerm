@@ -27,28 +27,28 @@
 #include <string>
 
 struct MaxSess {
-    PanedContainer  *savedRoot;
-    bool             first_child;
-    PanedContainer  *savedParent;
+    PanedContainer *savedRoot;
+    bool first_child;
+    PanedContainer *savedParent;
     TerminalSession *saved_sess;
 };
 
 class Tab;
 
 class TabTitle : public Gtk::Box {
-  public:
+public:
     TabTitle(const Glib::ustring &text, Tab *tab);
 
-  private:
+private:
     Gtk::Button *m_closeButton = nullptr;
-    TitleEntry  *m_titleTex    = nullptr;
+    TitleEntry *m_titleTex = nullptr;
     friend class Tab;
 };
 
 class Tab : public Gtk::Box {
-  public:
+public:
     Tab(RootPanedContainer *paned, const Glib::ustring &label) {
-        rootPaned  = paned;
+        rootPaned = paned;
         m_tabTitle = new TabTitle(label, this);
     }
     void AddToNotebook(Gtk::Notebook &notebook) {
@@ -60,21 +60,21 @@ class Tab : public Gtk::Box {
             m_notebook->remove_page(*this);
         }
     }
-    void        Max(TerminalSession *sess);
-    void        Restore();
+    void Max(TerminalSession *sess);
+    void Restore();
     static Tab *GetTab(PanedContainer *p);
-    bool        HasMaxSess();
+    bool HasMaxSess();
 
     bool HasTerminalSession(TerminalSession *sess) { return rootPaned->HasTerminalSession(sess); }
 
-  private:
+private:
     void setNotebook(Gtk::Notebook *notebook) { m_notebook = notebook; }
 
-  private:
+private:
     MaxSess *maxSess = nullptr;
 
-    RootPanedContainer *rootPaned  = nullptr;
-    TabTitle           *m_tabTitle = nullptr;
+    RootPanedContainer *rootPaned = nullptr;
+    TabTitle *m_tabTitle = nullptr;
 
     Gtk::Notebook *m_notebook = nullptr;
 };

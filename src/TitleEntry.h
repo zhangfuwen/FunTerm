@@ -6,7 +6,7 @@
 #define FUNTERM_TITLEENTRY_H
 #include <gtkmm.h>
 class TitleEntry : public Gtk::Entry {
-  public:
+public:
     TitleEntry() { Disable(); }
 
     explicit TitleEntry(const Glib::ustring &str) {
@@ -14,7 +14,7 @@ class TitleEntry : public Gtk::Entry {
         set_text(str);
     }
 
-  protected:
+protected:
     void on_editing_done() override {
         Disable();
         CellEditable::on_editing_done();
@@ -40,7 +40,7 @@ class TitleEntry : public Gtk::Entry {
         return Widget::on_key_release_event(key_event);
     }
 
-  public:
+public:
     void Enable() {
         set_can_focus(true);
         set_has_frame(true);
